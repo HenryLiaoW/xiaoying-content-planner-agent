@@ -219,7 +219,7 @@ class Tools:
         if not (args.set_tier or args.set_query or args.set_depends or args.remove or args.add):
             return _err("empty_revision", "revise_plan 没有包含任何修改")
         try:
-            new_plan, changes = apply_revision(self.plan, args, self.table)
+            new_plan, changes, plain = apply_revision(self.plan, args, self.table)
         except PlanError as e:
             return _err(e.code, e.detail)
         before = self.last_estimate if (self.last_estimate and self.last_estimate.revision == self.plan.revision) else self._estimate_now()
@@ -238,11 +238,13 @@ class Tools:
                 "before": {"projected_total": before.projected, "projected_finish": before.projected_finish.isoformat()},
                 "after": {"projected_total": after.projected, "projected_finish": after.projected_finish.isoformat()},
                 "changes": changes,
+                "changes_plain": plain,
                 "model_reason": args.reason,
             }
         )
         return {
             "ok": True,
+            "revision": new_plan.revision,
             "message": f"计划已更新为 revision {new_plan.revision}；执行前必须重新 estimate_cost",
             "changed": changes,
             "plan": self.plan_view(),

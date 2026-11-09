@@ -94,6 +94,10 @@ def _now_iso() -> str:
 class Store:
     def __init__(self, path: str):
         self.path = path
+        if path != ":memory:":
+            from pathlib import Path
+
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(path, isolation_level=None)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")

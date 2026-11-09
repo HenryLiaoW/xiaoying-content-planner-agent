@@ -125,13 +125,23 @@ def build_plan(run_id: str, specs: list[StepSpec], table: CostTable) -> Plan:
     return Plan(run_id=run_id, revision=1, steps=steps)
 
 
-def apply_revision(plan: Plan, args: RevisePlanArgs, table: CostTable) -> tuple[Plan, list[str]]:
-    """原子修订：任一项不合法则整体拒绝，返回 (新计划, 变更描述列表)。
+TIER_NAMES = {"pro": "完整版", "lite": "简版"}
+KEY_NAMES = {"main": "主视频", "teaser": "预热"}
+
+
+def _label(s: Step) -> str:
+    key = s.deliverable.key if s.deliverable else s.id
+    return KEY_NAMES.get(key, key)
+
+
+def apply_revision(plan: Plan, args: RevisePlanArgs, table: CostTable) -> tuple[Plan, list[str], list[str]]:
+    """原子修订：任一项不合法则整体拒绝，返回 (新计划, 技术变更列表, 给运营看的变更列表)。
 
     规则：不得触碰 done 步骤；删除只限非 main；改档位/改词的失败步骤重置为 pending 且重试计数归零。
     """
     new = deepcopy(plan)
     changes: list[str] = []
+    plain: list[str] = []
     by_id = {s.id: s for s in new.steps}
 
     def touchable(sid: str) -> Step:
@@ -151,6 +161,7 @@ def apply_revision(plan: Plan, args: RevisePlanArgs, table: CostTable) -> tuple[
         if s.tier != ch.tier:
             label = s.deliverable.key if s.deliverable else s.id
             changes.append(f"{s.id} {label} 脚本 {s.tier}→{ch.tier}（{new_cost - old_cost:+g}）")
+            plain.append(f"{_label(s)}脚本由{TIER_NAMES.get(s.tier or '', s.tier)}改为{TIER_NAMES.get(ch.tier, ch.tier)}")
             s.tier = ch.tier
             if s.status == "failed":
                 s.status, s.attempts = "pending", 0
@@ -161,6 +172,7 @@ def apply_revision(plan: Plan, args: RevisePlanArgs, table: CostTable) -> tuple[
             raise PlanError("invalid_step", f"{s.id} 不是搜索步骤，不能改检索词")
         if s.query != ch.query:
             changes.append(f"{s.id} 搜索词「{s.query}」→「{ch.query}」")
+            plain.append(f"检索词改为「{ch.query}」")
             s.query = ch.query
             if s.status == "failed":
                 s.status, s.attempts = "pending", 0
@@ -178,6 +190,7 @@ def apply_revision(plan: Plan, args: RevisePlanArgs, table: CostTable) -> tuple[
         cost, _ = table.cost_hours(s.action, s.tier)
         kind = "搜索" if s.action == "search_materials" else f"{s.deliverable.key if s.deliverable else ''} 脚本"
         changes.append(f"删除 {sid} {kind}（{-cost:+g}）")
+        plain.append("减少一次素材搜索" if s.action == "search_materials" else f"取消{_label(s)}脚本")
         new.steps = [x for x in new.steps if x.id != sid]
         for x in new.steps:
             if sid in x.depends_on:
@@ -189,12 +202,13 @@ def apply_revision(plan: Plan, args: RevisePlanArgs, table: CostTable) -> tuple[
         st = Step(**sp.model_dump())
         cost, _ = table.cost_hours(st.action, st.tier)
         changes.append(f"新增 {st.id} {st.action}{'/' + st.tier if st.tier else ''}（{cost:+g}）")
+        plain.append("增加一次素材搜索" if st.action == "search_materials" else f"增加{_label(st)}脚本（{TIER_NAMES.get(st.tier or '', st.tier)}）")
         new.steps.append(st)
 
     _check_structure(new.steps, table)
     _fill_costs(new.steps, table)
     new.revision = plan.revision + 1
-    return new, changes
+    return new, changes, plain
 
 
 # ------------------------------------------------------------- 估算 ----
