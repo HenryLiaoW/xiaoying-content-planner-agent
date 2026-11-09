@@ -104,7 +104,11 @@ def run_loop(
             trace.event("limit_reached", reason="llm_rounds_limit", steps_used=steps_used, llm_rounds=rounds)
             return LoopResult("incomplete", "llm_rounds_limit", steps_used, rounds, usage=usage)
 
-        reply = llm.chat(messages, schemas)
+        try:
+            reply = llm.chat(messages, schemas)
+        except Exception as e:  # 模型接口异常（超时、鉴权、网络）：如实记录并以 incomplete 结束，不伪造结果
+            trace.event("llm_error", error=type(e).__name__, message=str(e)[:300], llm_round=rounds + 1)
+            return LoopResult("incomplete", "llm_error", steps_used, rounds, usage=usage)
         rounds += 1
         for k, v in reply.usage.items():
             usage[k] = usage.get(k, 0) + v

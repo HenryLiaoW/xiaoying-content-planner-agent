@@ -1,0 +1,5 @@
+Command: uv run pytest -q
+Python: 3.13.18  Platform: Linux  Date: 2026-11-09T07:37Z
+
+..............................................................           [100%]
+62 passed in 2.29s

@@ -72,6 +72,7 @@ def build_report(
                 "step_limit_reached": f"达到动作上限 {max_steps}，任务未完成",
                 "llm_rounds_limit": "模型交互轮次达到上限，任务未完成",
                 "model_no_tool_call": "模型连续未发出工具调用，任务未完成",
+                "llm_error": "模型接口调用失败（见 trace 中的 llm_error 事件），任务未完成",
             }.get(result.reason, result.reason)
 
     adjustments = list(tools.adjustments)
@@ -166,6 +167,8 @@ def _user_message(
         )
     if reason == "step_limit_reached":
         return f"已用完 {max_steps} 次动作额度，任务未完成；{kept}，可用 --resume 继续。"
+    if reason == "llm_error":
+        return f"模型接口调用失败，任务未完成；{kept}，检查网络或密钥后可用 --resume 继续。"
     if status == "failed":
         failed = [s.id for s in (plan.steps if plan else []) if s.status == "failed"]
         where = f"步骤 {', '.join(failed)} " if failed else ""
