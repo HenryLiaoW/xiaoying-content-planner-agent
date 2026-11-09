@@ -1,0 +1,479 @@
+{
+  "run_id": "run_7f0a7a8c0d2c",
+  "request_id": "req-no-materials-001",
+  "fingerprint": "ffc40a1318f8ead5324b2952d54748f0547c1d4a301b29e4e23dfcfc3f54e438",
+  "attempt_no": 1,
+  "served_from": "executed",
+  "mode": "offline_mock",
+  "model": "mock:no_materials",
+  "temperature": null,
+  "sdk": null,
+  "status": "completed",
+  "finish_reason": "finish_accepted",
+  "steps_used": 10,
+  "max_steps": 15,
+  "llm_rounds": 10,
+  "business_exec_count": 3,
+  "result": {
+    "plan": {
+      "revision": 2,
+      "steps": [
+        {
+          "id": "s1",
+          "action": "search_materials",
+          "tier": null,
+          "query": "水下 摄影",
+          "depends_on": [],
+          "deliverable": null,
+          "status": "done",
+          "attempts": 1,
+          "cost": 1.0,
+          "hours": 0.5
+        },
+        {
+          "id": "s2",
+          "action": "generate_script",
+          "tier": "lite",
+          "brief": "主视频脚本",
+          "depends_on": [
+            "s1",
+            "s1b"
+          ],
+          "deliverable": {
+            "key": "main",
+            "required": true
+          },
+          "status": "done",
+          "attempts": 1,
+          "cost": 2.0,
+          "hours": 1.0
+        },
+        {
+          "id": "s1b",
+          "action": "search_materials",
+          "tier": null,
+          "query": "教程 新手 模板",
+          "depends_on": [],
+          "deliverable": null,
+          "status": "done",
+          "attempts": 1,
+          "cost": 1.0,
+          "hours": 0.5
+        }
+      ]
+    },
+    "artifacts": {
+      "s1": {
+        "type": "materials",
+        "query": "水下 摄影",
+        "items": []
+      },
+      "s2": {
+        "type": "script",
+        "deliverable": {
+          "key": "main",
+          "required": true
+        },
+        "script": {
+          "tier": "lite",
+          "title": "水下摄影课程推广｜主视频脚本",
+          "outline": "用新手教程引导文案、一键成片日常 Vlog 模板、手机剪辑操作演示片段串成主视频脚本，突出水下摄影课程推广。",
+          "material_refs": [
+            "m12",
+            "m03",
+            "m05"
+          ]
+        }
+      },
+      "s1b": {
+        "type": "materials",
+        "query": "教程 新手 模板",
+        "items": [
+          {
+            "id": "m12",
+            "type": "copy",
+            "title": "新手教程引导文案",
+            "summary": "分步引导口播：打开模板、替换素材、调整字幕、一键导出。",
+            "tags": [
+              "文案",
+              "教程",
+              "新手",
+              "引导",
+              "字幕"
+            ]
+          },
+          {
+            "id": "m03",
+            "type": "template",
+            "title": "一键成片日常 Vlog 模板",
+            "summary": "导入 6–8 段素材即可自动成片，自带字幕样式，面向短视频新手。",
+            "tags": [
+              "Vlog",
+              "模板",
+              "一键成片",
+              "日常",
+              "新手"
+            ]
+          },
+          {
+            "id": "m05",
+            "type": "clip",
+            "title": "手机剪辑操作演示片段",
+            "summary": "12 秒 App 内套用模板与替换素材的录屏，展示一键操作流程。",
+            "tags": [
+              "操作演示",
+              "教程",
+              "手机剪辑",
+              "界面"
+            ]
+          },
+          {
+            "id": "m01",
+            "type": "template",
+            "title": "旅行 Vlog 快剪模板",
+            "summary": "10 段动态转场的竖屏 Vlog 模板，适合 15–30 秒成片，一键替换素材。",
+            "tags": [
+              "Vlog",
+              "模板",
+              "旅行",
+              "快剪",
+              "转场"
+            ]
+          },
+          {
+            "id": "m02",
+            "type": "template",
+            "title": "双11 促销倒计时模板",
+            "summary": "带倒计时贴纸与价格标签的促销模板，开头 3 秒强钩子，适合限时活动。",
+            "tags": [
+              "双11",
+              "促销",
+              "倒计时",
+              "模板",
+              "电商"
+            ]
+          },
+          {
+            "id": "m10",
+            "type": "copy",
+            "title": "模板功能卖点文案",
+            "summary": "四条功能卖点：一键成片、智能配乐、自动字幕、海量模板，每条 ≤15 字。",
+            "tags": [
+              "文案",
+              "卖点",
+              "模板",
+              "一键成片",
+              "Vlog"
+            ]
+          }
+        ]
+      }
+    },
+    "spent_cost": 4.0,
+    "remaining_estimate": 0,
+    "projected_total": 4.0,
+    "budget": 20.0,
+    "sim_finish": "2026-11-10T11:00:00+08:00",
+    "deadline": "2026-11-12T18:00:00+08:00",
+    "within_deadline": true,
+    "saved_plan": {
+      "revision": 2,
+      "saved_at": "2026-11-10T11:00:00+08:00"
+    },
+    "unfinished_reason": null,
+    "gap": null
+  },
+  "adjustments": [
+    {
+      "trigger": "no_materials",
+      "from_revision": 1,
+      "to_revision": 2,
+      "before": {
+        "projected_total": 3.0,
+        "projected_finish": "2026-11-10T10:30:00+08:00"
+      },
+      "after": {
+        "projected_total": 4.0,
+        "projected_finish": "2026-11-10T11:00:00+08:00"
+      },
+      "changes": [
+        "s2 依赖 ['s1']→['s1', 's1b']",
+        "新增 s1b search_materials（+1）"
+      ],
+      "changes_plain": [
+        "增加一次素材搜索"
+      ],
+      "model_reason": "首次检索无命中，换更通用的检索词补一次搜索"
+    }
+  ],
+  "user_message": "方案已保存，费用 4 / 预算 20，预计 11-10 11:00 完成。",
+  "model_summary": "方案已保存",
+  "llm_usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  },
+  "trace_review": [
+    {
+      "step": 1,
+      "attempt_no": 1,
+      "tool": "propose_plan",
+      "args": {
+        "steps": [
+          {
+            "id": "s1",
+            "action": "search_materials",
+            "query": "水下 摄影"
+          },
+          {
+            "id": "s2",
+            "action": "generate_script",
+            "tier": "lite",
+            "brief": "主视频脚本",
+            "depends_on": [
+              "s1"
+            ],
+            "deliverable": {
+              "key": "main",
+              "required": true
+            }
+          }
+        ]
+      },
+      "result_summary": {
+        "ok": true,
+        "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "plan": {
+          "revision": 1,
+          "steps": [
+            "s1:search_materials=pending",
+            "s2:generate_script/lite=pending"
+          ]
+        }
+      },
+      "next_action": "estimate_cost()",
+      "decision_basis": "按主题检索"
+    },
+    {
+      "step": 2,
+      "attempt_no": 1,
+      "tool": "estimate_cost",
+      "args": {},
+      "result_summary": {
+        "ok": true,
+        "message": "在预算与截止时间内，可以执行",
+        "spent_cost": 0.0,
+        "sim_now": "2026-11-10T09:00:00+08:00",
+        "revision": 1,
+        "projected_total": 3.0,
+        "remaining_estimate": 3.0,
+        "within_budget": true,
+        "within_deadline": true,
+        "over_budget_by": 0.0,
+        "over_time_hours": 0.0,
+        "min_feasible_cost": 3.0
+      },
+      "next_action": "search_materials(step_id=\"s1\", query=\"水下 摄影\")",
+      "decision_basis": "执行前估算"
+    },
+    {
+      "step": 3,
+      "attempt_no": 1,
+      "tool": "search_materials",
+      "args": {
+        "step_id": "s1",
+        "query": "水下 摄影"
+      },
+      "result_summary": {
+        "ok": true,
+        "message": "没有命中任何素材；可以换检索词重试（会再次计费），或停止",
+        "status": "done",
+        "charged": 1.0,
+        "spent_cost": 1.0,
+        "sim_now": "2026-11-10T09:30:00+08:00",
+        "count": 0,
+        "item_ids": []
+      },
+      "next_action": "revise_plan(add=[{\"id\": \"s1b\", \"action\": \"search_mate…, set_depends=[{\"step_id\": \"s2\", \"depends_on\": [\"s1…)",
+      "decision_basis": "先拿素材"
+    },
+    {
+      "step": 4,
+      "attempt_no": 1,
+      "tool": "revise_plan",
+      "args": {
+        "add": [
+          {
+            "id": "s1b",
+            "action": "search_materials",
+            "query": "教程 新手 模板"
+          }
+        ],
+        "set_depends": [
+          {
+            "step_id": "s2",
+            "depends_on": [
+              "s1",
+              "s1b"
+            ]
+          }
+        ]
+      },
+      "result_summary": {
+        "ok": true,
+        "message": "计划已更新为 revision 2；执行前必须重新 estimate_cost",
+        "revision": 2,
+        "changed": [
+          "s2 依赖 ['s1']→['s1', 's1b']",
+          "新增 s1b search_materials（+1）"
+        ],
+        "plan": {
+          "revision": 2,
+          "steps": [
+            "s1:search_materials=done",
+            "s2:generate_script/lite=pending",
+            "s1b:search_materials=pending"
+          ]
+        }
+      },
+      "next_action": "estimate_cost()",
+      "decision_basis": "首次检索无命中，换更通用的检索词补一次搜索"
+    },
+    {
+      "step": 5,
+      "attempt_no": 1,
+      "tool": "estimate_cost",
+      "args": {},
+      "result_summary": {
+        "ok": true,
+        "message": "在预算与截止时间内，可以执行",
+        "spent_cost": 1.0,
+        "sim_now": "2026-11-10T09:30:00+08:00",
+        "revision": 2,
+        "projected_total": 4.0,
+        "remaining_estimate": 3.0,
+        "within_budget": true,
+        "within_deadline": true,
+        "over_budget_by": 0.0,
+        "over_time_hours": 0.0,
+        "min_feasible_cost": 3.0
+      },
+      "next_action": "search_materials(step_id=\"s1b\", query=\"教程 新手 模板\")",
+      "decision_basis": "改计划后重新估算"
+    },
+    {
+      "step": 6,
+      "attempt_no": 1,
+      "tool": "search_materials",
+      "args": {
+        "step_id": "s1b",
+        "query": "教程 新手 模板"
+      },
+      "result_summary": {
+        "ok": true,
+        "status": "done",
+        "charged": 1.0,
+        "spent_cost": 2.0,
+        "sim_now": "2026-11-10T10:00:00+08:00",
+        "count": 6,
+        "item_ids": [
+          "m12",
+          "m03",
+          "m05",
+          "m01",
+          "m02",
+          "m10"
+        ]
+      },
+      "next_action": "generate_script(step_id=\"s2\", material_ids=[\"m12\", \"m03\", \"m05\"], brief=\"主视频脚本\")",
+      "decision_basis": "补搜"
+    },
+    {
+      "step": 7,
+      "attempt_no": 1,
+      "tool": "generate_script",
+      "args": {
+        "step_id": "s2",
+        "material_ids": [
+          "m12",
+          "m03",
+          "m05"
+        ],
+        "brief": "主视频脚本"
+      },
+      "result_summary": {
+        "ok": true,
+        "status": "done",
+        "charged": 2.0,
+        "spent_cost": 4.0,
+        "sim_now": "2026-11-10T11:00:00+08:00",
+        "script": {
+          "tier": "lite",
+          "title": "水下摄影课程推广｜主视频脚本",
+          "scenes": null,
+          "material_refs": [
+            "m12",
+            "m03",
+            "m05"
+          ]
+        }
+      },
+      "next_action": "estimate_cost()",
+      "decision_basis": "有素材了，生成主脚本"
+    },
+    {
+      "step": 8,
+      "attempt_no": 1,
+      "tool": "estimate_cost",
+      "args": {},
+      "result_summary": {
+        "ok": true,
+        "message": "在预算与截止时间内，可以执行",
+        "spent_cost": 4.0,
+        "sim_now": "2026-11-10T11:00:00+08:00",
+        "revision": 2,
+        "projected_total": 4.0,
+        "remaining_estimate": 0.0,
+        "within_budget": true,
+        "within_deadline": true,
+        "over_budget_by": 0.0,
+        "over_time_hours": 0.0,
+        "min_feasible_cost": 4.0
+      },
+      "next_action": "save_plan()",
+      "decision_basis": "保存前复核剩余费用为 0"
+    },
+    {
+      "step": 9,
+      "attempt_no": 1,
+      "tool": "save_plan",
+      "args": {},
+      "result_summary": {
+        "ok": true,
+        "message": "方案已保存",
+        "spent_cost": 4.0,
+        "revision": 2,
+        "saved": "created"
+      },
+      "next_action": "finish(status=\"completed\", summary=\"方案已保存\")",
+      "decision_basis": "全部步骤完成且在预算内"
+    },
+    {
+      "step": 10,
+      "attempt_no": 1,
+      "tool": "finish",
+      "args": {
+        "status": "completed",
+        "summary": "方案已保存"
+      },
+      "result_summary": {
+        "ok": true,
+        "status": "completed",
+        "accepted": true
+      },
+      "next_action": "(end)",
+      "decision_basis": "保存成功"
+    }
+  ],
+  "note": "离线 Mock 仅验证流程与状态机，不代表真实模型的决策效果"
+}

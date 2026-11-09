@@ -1,0 +1,1 @@
+python -m src.main --input examples/mock/infeasible/input.json --out examples/mock/infeasible --db examples/mock/infeasible/agent.db --mock --mock-script infeasible

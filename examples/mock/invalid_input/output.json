@@ -1,0 +1,5 @@
+{
+  "status": "invalid_input",
+  "error": "budget 必须是数字（不接受字符串）",
+  "user_message": "输入格式有误：budget 必须是数字（不接受字符串）"
+}

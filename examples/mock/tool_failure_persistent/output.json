@@ -1,0 +1,335 @@
+{
+  "run_id": "run_d3b0c6879fb6",
+  "request_id": "req-tool-failure-persistent-001",
+  "fingerprint": "2ad872774cba03c9dee6fe65f2012e470b71cc9ed5f2f2595ff17d1df2876476",
+  "attempt_no": 1,
+  "served_from": "executed",
+  "mode": "offline_mock",
+  "model": "mock:tool_failure_persistent",
+  "temperature": null,
+  "sdk": null,
+  "status": "failed",
+  "finish_reason": "finish_accepted",
+  "steps_used": 7,
+  "max_steps": 15,
+  "llm_rounds": 7,
+  "business_exec_count": 3,
+  "result": {
+    "plan": {
+      "revision": 1,
+      "steps": [
+        {
+          "id": "s1",
+          "action": "search_materials",
+          "tier": null,
+          "query": "Vlog 模板 双11",
+          "depends_on": [],
+          "deliverable": null,
+          "status": "done",
+          "attempts": 1,
+          "cost": 1.0,
+          "hours": 0.5
+        },
+        {
+          "id": "s2",
+          "action": "generate_script",
+          "tier": "pro",
+          "brief": "主视频脚本",
+          "depends_on": [
+            "s1"
+          ],
+          "deliverable": {
+            "key": "main",
+            "required": true
+          },
+          "status": "failed",
+          "attempts": 2,
+          "cost": 5.0,
+          "hours": 2.0
+        }
+      ]
+    },
+    "artifacts": {
+      "s1": {
+        "type": "materials",
+        "query": "Vlog 模板 双11",
+        "items": [
+          {
+            "id": "m01",
+            "type": "template",
+            "title": "旅行 Vlog 快剪模板",
+            "summary": "10 段动态转场的竖屏 Vlog 模板，适合 15–30 秒成片，一键替换素材。",
+            "tags": [
+              "Vlog",
+              "模板",
+              "旅行",
+              "快剪",
+              "转场"
+            ]
+          },
+          {
+            "id": "m02",
+            "type": "template",
+            "title": "双11 促销倒计时模板",
+            "summary": "带倒计时贴纸与价格标签的促销模板，开头 3 秒强钩子，适合限时活动。",
+            "tags": [
+              "双11",
+              "促销",
+              "倒计时",
+              "模板",
+              "电商"
+            ]
+          },
+          {
+            "id": "m03",
+            "type": "template",
+            "title": "一键成片日常 Vlog 模板",
+            "summary": "导入 6–8 段素材即可自动成片，自带字幕样式，面向短视频新手。",
+            "tags": [
+              "Vlog",
+              "模板",
+              "一键成片",
+              "日常",
+              "新手"
+            ]
+          },
+          {
+            "id": "m10",
+            "type": "copy",
+            "title": "模板功能卖点文案",
+            "summary": "四条功能卖点：一键成片、智能配乐、自动字幕、海量模板，每条 ≤15 字。",
+            "tags": [
+              "文案",
+              "卖点",
+              "模板",
+              "一键成片",
+              "Vlog"
+            ]
+          },
+          {
+            "id": "m04",
+            "type": "clip",
+            "title": "城市夜景延时片段",
+            "summary": "8 秒城市夜景延时空镜，可做开场或转场过渡。",
+            "tags": [
+              "夜景",
+              "延时",
+              "城市",
+              "空镜",
+              "Vlog"
+            ]
+          },
+          {
+            "id": "m06",
+            "type": "clip",
+            "title": "快递开箱与购物袋片段",
+            "summary": "6 秒开箱与购物袋特写，配合促销话术使用。",
+            "tags": [
+              "开箱",
+              "购物",
+              "双11",
+              "电商",
+              "生活"
+            ]
+          }
+        ]
+      }
+    },
+    "spent_cost": 1.0,
+    "remaining_estimate": 5.0,
+    "projected_total": 6.0,
+    "budget": 20.0,
+    "sim_finish": "2026-11-10T09:30:00+08:00",
+    "deadline": "2026-11-12T18:00:00+08:00",
+    "within_deadline": true,
+    "saved_plan": null,
+    "unfinished_reason": "主脚本 s2 连续 2 次失败并达到重试上限；搜索结果已保留",
+    "gap": null
+  },
+  "adjustments": [],
+  "user_message": "任务失败：步骤 s2 主脚本 s2 连续 2 次失败并达到重试上限；搜索结果已保留。已完成的 1 个步骤（s1）及其结果已保留，可用 --resume 重试。",
+  "model_summary": "脚本服务持续不可用，任务失败",
+  "llm_usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  },
+  "trace_review": [
+    {
+      "step": 1,
+      "attempt_no": 1,
+      "tool": "propose_plan",
+      "args": {
+        "steps": [
+          {
+            "id": "s1",
+            "action": "search_materials",
+            "query": "Vlog 模板 双11"
+          },
+          {
+            "id": "s2",
+            "action": "generate_script",
+            "tier": "pro",
+            "brief": "主视频脚本",
+            "depends_on": [
+              "s1"
+            ],
+            "deliverable": {
+              "key": "main",
+              "required": true
+            }
+          }
+        ]
+      },
+      "result_summary": {
+        "ok": true,
+        "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "plan": {
+          "revision": 1,
+          "steps": [
+            "s1:search_materials=pending",
+            "s2:generate_script/pro=pending"
+          ]
+        }
+      },
+      "next_action": "estimate_cost()",
+      "decision_basis": "只做主脚本"
+    },
+    {
+      "step": 2,
+      "attempt_no": 1,
+      "tool": "estimate_cost",
+      "args": {},
+      "result_summary": {
+        "ok": true,
+        "message": "在预算与截止时间内，可以执行",
+        "spent_cost": 0.0,
+        "sim_now": "2026-11-10T09:00:00+08:00",
+        "revision": 1,
+        "projected_total": 6.0,
+        "remaining_estimate": 6.0,
+        "within_budget": true,
+        "within_deadline": true,
+        "over_budget_by": 0.0,
+        "over_time_hours": 0.0,
+        "min_feasible_cost": 3.0
+      },
+      "next_action": "search_materials(step_id=\"s1\", query=\"Vlog 模板 双11\")",
+      "decision_basis": "执行前估算"
+    },
+    {
+      "step": 3,
+      "attempt_no": 1,
+      "tool": "search_materials",
+      "args": {
+        "step_id": "s1",
+        "query": "Vlog 模板 双11"
+      },
+      "result_summary": {
+        "ok": true,
+        "status": "done",
+        "charged": 1.0,
+        "spent_cost": 1.0,
+        "sim_now": "2026-11-10T09:30:00+08:00",
+        "count": 6,
+        "item_ids": [
+          "m01",
+          "m02",
+          "m03",
+          "m10",
+          "m04",
+          "m06"
+        ]
+      },
+      "next_action": "generate_script(step_id=\"s2\", material_ids=[\"m01\", \"m02\", \"m03\"], brief=\"主视频脚本\")",
+      "decision_basis": "先拿素材"
+    },
+    {
+      "step": 4,
+      "attempt_no": 1,
+      "tool": "generate_script",
+      "args": {
+        "step_id": "s2",
+        "material_ids": [
+          "m01",
+          "m02",
+          "m03"
+        ],
+        "brief": "主视频脚本"
+      },
+      "result_summary": {
+        "ok": false,
+        "error": "tool_error",
+        "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 1 次尝试失败；未计费",
+        "attempts": 1,
+        "attempts_left": 1
+      },
+      "next_action": "generate_script(step_id=\"s2\", material_ids=[\"m01\", \"m02\", \"m03\"], brief=\"主视频脚本\")",
+      "decision_basis": "生成主脚本"
+    },
+    {
+      "step": 5,
+      "attempt_no": 1,
+      "tool": "generate_script",
+      "args": {
+        "step_id": "s2",
+        "material_ids": [
+          "m01",
+          "m02",
+          "m03"
+        ],
+        "brief": "主视频脚本"
+      },
+      "result_summary": {
+        "ok": false,
+        "error": "tool_error",
+        "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 2 次尝试失败；未计费",
+        "attempts": 2,
+        "attempts_left": 0
+      },
+      "next_action": "generate_script(step_id=\"s2\", material_ids=[\"m01\", \"m02\", \"m03\"], brief=\"主视频脚本\")",
+      "decision_basis": "重试一次"
+    },
+    {
+      "step": 6,
+      "attempt_no": 1,
+      "tool": "generate_script",
+      "args": {
+        "step_id": "s2",
+        "material_ids": [
+          "m01",
+          "m02",
+          "m03"
+        ],
+        "brief": "主视频脚本"
+      },
+      "result_summary": {
+        "ok": false,
+        "error": "retry_limit_reached",
+        "message": "步骤 s2 已尝试 2 次，达到上限 2；可以换档位 / 改计划，或停止",
+        "attempts": 2
+      },
+      "next_action": "finish(status=\"failed\", summary=\"脚本服务持续不可用，任务失败\", unfinished_reason=\"主脚本 s2 连续 2 次失败并达到重试上限；搜索结果已保留\")",
+      "decision_basis": "再试"
+    },
+    {
+      "step": 7,
+      "attempt_no": 1,
+      "tool": "finish",
+      "args": {
+        "status": "failed",
+        "summary": "脚本服务持续不可用，任务失败",
+        "unfinished_reason": "主脚本 s2 连续 2 次失败并达到重试上限；搜索结果已保留"
+      },
+      "result_summary": {
+        "ok": true,
+        "status": "failed",
+        "accepted": true,
+        "unfinished_reason": "主脚本 s2 连续 2 次失败并达到重试上限；搜索结果已保留"
+      },
+      "next_action": "(end)",
+      "decision_basis": "重试上限已到，停止"
+    }
+  ],
+  "note": "离线 Mock 仅验证流程与状态机，不代表真实模型的决策效果"
+}

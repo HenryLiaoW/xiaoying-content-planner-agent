@@ -1,0 +1,1 @@
+python -m src.main --input examples/mock/tool_failure_persistent/input.json --out examples/mock/tool_failure_persistent --db examples/mock/tool_failure_persistent/agent.db --inject generate_script:always --mock --mock-script tool_failure_persistent

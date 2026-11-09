@@ -1,0 +1,1 @@
+python -m src.main --input examples/mock/invalid_input/input.json --out examples/mock/invalid_input --db examples/mock/invalid_input/agent.db --mock --mock-script normal

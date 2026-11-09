@@ -1,0 +1,8 @@
+{
+  "status": "needs_input",
+  "missing_fields": [
+    "budget"
+  ],
+  "clarifying_question": "请补充预算后重新提交。",
+  "user_message": "缺少预算，请补充后重新提交。本次未调用模型、未产生费用。"
+}

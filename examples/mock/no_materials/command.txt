@@ -1,0 +1,1 @@
+python -m src.main --input examples/mock/no_materials/input.json --out examples/mock/no_materials --db examples/mock/no_materials/agent.db --mock --mock-script no_materials

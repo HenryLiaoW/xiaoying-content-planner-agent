@@ -1,0 +1,155 @@
+{
+  "run_id": "run_48eeba8141ee",
+  "request_id": "req-infeasible-001",
+  "fingerprint": "391c574cb3261cd664c5c68d02fa5aa938c7043df77270fd78c306701c9da802",
+  "attempt_no": 1,
+  "served_from": "executed",
+  "mode": "offline_mock",
+  "model": "mock:infeasible",
+  "temperature": null,
+  "sdk": null,
+  "status": "incomplete",
+  "finish_reason": "finish_accepted",
+  "steps_used": 3,
+  "max_steps": 15,
+  "llm_rounds": 3,
+  "business_exec_count": 0,
+  "result": {
+    "plan": {
+      "revision": 1,
+      "steps": [
+        {
+          "id": "s1",
+          "action": "search_materials",
+          "tier": null,
+          "query": "Vlog 模板 双11",
+          "depends_on": [],
+          "deliverable": null,
+          "status": "pending",
+          "attempts": 0,
+          "cost": 1.0,
+          "hours": 0.5
+        },
+        {
+          "id": "s2",
+          "action": "generate_script",
+          "tier": "lite",
+          "brief": "主视频脚本",
+          "depends_on": [
+            "s1"
+          ],
+          "deliverable": {
+            "key": "main",
+            "required": true
+          },
+          "status": "pending",
+          "attempts": 0,
+          "cost": 2.0,
+          "hours": 1.0
+        }
+      ]
+    },
+    "artifacts": {},
+    "spent_cost": 0.0,
+    "remaining_estimate": 3.0,
+    "projected_total": 3.0,
+    "budget": 2.0,
+    "sim_finish": "2026-11-10T09:00:00+08:00",
+    "deadline": "2026-11-12T18:00:00+08:00",
+    "within_deadline": true,
+    "saved_plan": null,
+    "unfinished_reason": "最低可行费用 3 高于预算 2，缺口 1，没有可行方案",
+    "gap": 1.0
+  },
+  "adjustments": [],
+  "user_message": "未能生成方案：最低交付（一次素材搜索 + 一份简版主脚本）至少需要 3，预算为 2，缺口 1。可将预算提高到 3 后重新提交。",
+  "model_summary": "预算不足以完成最低交付",
+  "llm_usage": {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+  },
+  "trace_review": [
+    {
+      "step": 1,
+      "attempt_no": 1,
+      "tool": "propose_plan",
+      "args": {
+        "steps": [
+          {
+            "id": "s1",
+            "action": "search_materials",
+            "query": "Vlog 模板 双11"
+          },
+          {
+            "id": "s2",
+            "action": "generate_script",
+            "tier": "lite",
+            "brief": "主视频脚本",
+            "depends_on": [
+              "s1"
+            ],
+            "deliverable": {
+              "key": "main",
+              "required": true
+            }
+          }
+        ]
+      },
+      "result_summary": {
+        "ok": true,
+        "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "plan": {
+          "revision": 1,
+          "steps": [
+            "s1:search_materials=pending",
+            "s2:generate_script/lite=pending"
+          ]
+        }
+      },
+      "next_action": "estimate_cost()",
+      "decision_basis": "预算很少，直接用最省配置"
+    },
+    {
+      "step": 2,
+      "attempt_no": 1,
+      "tool": "estimate_cost",
+      "args": {},
+      "result_summary": {
+        "ok": true,
+        "message": "预计总费用 3 超出预算 2，超出 1；最低可行费用 3 仍高于预算，缺口 1；没有可行方案",
+        "spent_cost": 0.0,
+        "sim_now": "2026-11-10T09:00:00+08:00",
+        "revision": 1,
+        "projected_total": 3.0,
+        "remaining_estimate": 3.0,
+        "within_budget": false,
+        "within_deadline": true,
+        "over_budget_by": 1.0,
+        "over_time_hours": 0.0,
+        "min_feasible_cost": 3.0
+      },
+      "next_action": "finish(status=\"incomplete\", summary=\"预算不足以完成最低交付\", unfinished_reason=\"最低可行费用 3 高于预算 2，缺口 1，没有可行方案\")",
+      "decision_basis": "执行前估算"
+    },
+    {
+      "step": 3,
+      "attempt_no": 1,
+      "tool": "finish",
+      "args": {
+        "status": "incomplete",
+        "summary": "预算不足以完成最低交付",
+        "unfinished_reason": "最低可行费用 3 高于预算 2，缺口 1，没有可行方案"
+      },
+      "result_summary": {
+        "ok": true,
+        "status": "incomplete",
+        "accepted": true,
+        "unfinished_reason": "最低可行费用 3 高于预算 2，缺口 1，没有可行方案"
+      },
+      "next_action": "(end)",
+      "decision_basis": "min_feasible_cost 已超预算，继续调整无意义"
+    }
+  ],
+  "note": "离线 Mock 仅验证流程与状态机，不代表真实模型的决策效果"
+}

@@ -1,0 +1,1 @@
+python -m src.main --input examples/mock/step_limit/input.json --out examples/mock/step_limit --db examples/mock/step_limit/agent.db --max-steps 4 --mock --mock-script normal

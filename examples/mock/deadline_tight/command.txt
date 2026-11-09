@@ -1,0 +1,1 @@
+python -m src.main --input examples/mock/deadline_tight/input.json --out examples/mock/deadline_tight --db examples/mock/deadline_tight/agent.db --mock --mock-script deadline_tight
