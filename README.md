@@ -49,7 +49,8 @@ python -m src.main dump --db PATH --run RUN_ID      # 导出某任务在库中�
 │   ├── plan.py      计划结构校验、原子修订、三口径估算、最低可行费用
 │   ├── tools.py     七个动作：执行前校验 → 执行 → 记账；故障注入；模板脚本
 │   ├── llm.py       OpenAI 兼容客户端与 MockLLM（同接口）
-│   ├── loop.py      决策循环（每轮一个动作、步数上限）与系统提示词
+│   ├── loop.py      决策循环（每轮一个动作、步数上限）；读取并填充提示词模板
+│   ├── prompts/system.md  系统提示词模板（$变量 占位，改措辞不改代码）
 │   ├── trace.py     追加式事件日志、审阅版导出
 │   ├── report.py    从库组装终报、调整说明、面向运营的结论
 │   └── mock_scripts.py  离线脚本（每场景一份，核对收到的观察）

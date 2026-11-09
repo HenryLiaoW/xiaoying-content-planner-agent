@@ -53,7 +53,8 @@ projected    spent + remaining（预算约束看它）    min_feasible  满足�
 | `src/plan.py` | 结构校验（无环、恰好一个必需 main 且依赖搜索）、原子修订、估算、保存阻塞项 | `build_plan` `apply_revision` `estimate` `save_blockers` |
 | `src/tools.py` | 七个动作：执行前校验 → 执行 → 记账；故障注入；模板脚本；调整说明 | `Tools.execute` `_precheck` `_run_step` |
 | `src/llm.py` | OpenAI 兼容客户端（qwen-plus，temperature 0，timeout 60s，max_retries 1）；MockLLM | `OpenAICompatClient.chat` `MockLLM` |
-| `src/loop.py` | 每轮一个动作、动作上限（默认 15，计所有动作含 finish 与被拒）、重复动作提醒、系统提示词 | `run_loop` `build_system_prompt` |
+| `src/loop.py` | 每轮一个动作、动作上限（默认 15，计所有动作含 finish 与被拒）、重复动作提醒；读取并填充提示词模板 | `run_loop` `build_system_prompt` |
+| `src/prompts/system.md` | 系统提示词模板（`string.Template` 的 `$变量` 占位）：角色、工具、费用表、本次任务、硬约束、决策选项 | — |
 | `src/trace.py` | 追加式 JSONL；审阅版（步骤 / 参数 / 返回摘要 / 后续动作 / 决策依据） | `Trace.event` `Trace.review` |
 | `src/report.py` | 终报全部取自库；`adjustments` 与 `user_message` | `build_report` |
 | `src/main.py` | CLI、身份分流、`--resume` / `--new-task` / `--inject` / `--mock`、`dump` | `run_request` |
