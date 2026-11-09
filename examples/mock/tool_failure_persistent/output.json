@@ -1,5 +1,5 @@
 {
-  "run_id": "run_d3b0c6879fb6",
+  "run_id": "run_1f283720d620",
   "request_id": "req-tool-failure-persistent-001",
   "fingerprint": "2ad872774cba03c9dee6fe65f2012e470b71cc9ed5f2f2595ff17d1df2876476",
   "attempt_no": 1,
@@ -147,7 +147,7 @@
     "gap": null
   },
   "adjustments": [],
-  "user_message": "任务失败：步骤 s2 主脚本 s2 连续 2 次失败并达到重试上限；搜索结果已保留。已完成的 1 个步骤（s1）及其结果已保留，可用 --resume 重试。",
+  "user_message": "未能完成方案：主视频脚本生成连续 2 次失败。已完成的 1 个步骤（s1）及其结果已保留，已花费 1 / 预算 20。你可以稍后用 --resume 重试（只会重做失败的步骤，不重复计费）；若仍失败，请联系脚本生成服务的负责人。 模型说明：主脚本 s2 连续 2 次失败并达到重试上限；搜索结果已保留",
   "model_summary": "脚本服务持续不可用，任务失败",
   "llm_usage": {
     "prompt_tokens": 0,
@@ -184,6 +184,7 @@
       "result_summary": {
         "ok": true,
         "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "revision": 1,
         "plan": {
           "revision": 1,
           "steps": [

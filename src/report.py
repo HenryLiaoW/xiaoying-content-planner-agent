@@ -174,7 +174,15 @@ def _user_message(
     if reason == "llm_error":
         return f"模型接口调用失败，任务未完成；{kept}，检查网络或密钥后可用 --resume 继续。"
     if status == "failed":
-        failed = [s.id for s in (plan.steps if plan else []) if s.status == "failed"]
-        where = f"步骤 {', '.join(failed)} " if failed else ""
-        return f"任务失败：{where}{unfinished_reason or ''}。{kept}，可用 --resume 重试。"
+        from .plan import _label
+
+        failed = [s for s in (plan.steps if plan else []) if s.status == "failed"]
+        what = "；".join(
+            f"{(_label(s) + '脚本生成') if s.action == 'generate_script' else '素材搜索'}连续 {s.attempts} 次失败" for s in failed
+        ) or (unfinished_reason or "执行失败")
+        return (
+            f"未能完成方案：{what}。{kept}，已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
+            f"你可以稍后用 --resume 重试（只会重做失败的步骤，不重复计费）；若仍失败，请联系脚本生成服务的负责人。"
+            + (f" 模型说明：{unfinished_reason}" if unfinished_reason else "")
+        )
     return f"任务未完成：{unfinished_reason or reason}。{kept}，可用 --resume 继续。已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
