@@ -8,6 +8,11 @@
 | 时间（11-09） | 内容 | 产出 |
 |---|---|---|
 | 15:00 | 开始。仓库骨架（uv、pyproject、.gitignore、.env.example）、合成数据（费用表、12 条素材） | `pyproject.toml` `uv.lock` `requirements.txt` `data/` |
+| 15:15–15:55 | schema / store / plan / tools 四层，手工走查附录 B 例子（12→8、注入失败、保存、结束） | 提交 `34f629e` |
+| 15:55–16:10 | llm / loop / trace / report / main；离线三场景跑通；README | 提交 `1e94b7c` |
+| 16:10–16:35 | Henry 本机真实模型：normal 通过（7 步、费用 6）；pytest 62 项；11 个离线场景产物；docs 初稿 | 提交 `e139485` `cccb991` `9183801` |
+| 16:35–17:00 | 真实模型 tool_failure_once / over_budget / over_budget_b；偏好让步记录；逐条分析结果 | 提交 `244d658` `689be5f` |
+| 17:00–18:00 | （进行中）docs/03 写入四条真实结果；Henry 阅读 loop.py | |
 
 ## 额外投入
 
