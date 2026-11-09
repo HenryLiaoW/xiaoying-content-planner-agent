@@ -1,0 +1,17 @@
+{
+  "version": "2026-11-09.v1",
+  "unit": "模拟单位（simulated unit）；工时单位为小时",
+  "note": "合成数据，仅供笔试。失败的尝试不计费、不推进模拟时钟（MVP 假设）。",
+  "actions": {
+    "search_materials": {"cost": 1, "hours": 0.5},
+    "generate_script": {
+      "pro":  {"cost": 5, "hours": 2.0, "desc": "完整脚本：钩子、≥3 分镜（画面+旁白）、行动号召"},
+      "lite": {"cost": 2, "hours": 1.0, "desc": "简版脚本：标题 + ≤80 字提纲"}
+    },
+    "propose_plan": {"cost": 0, "hours": 0},
+    "revise_plan":  {"cost": 0, "hours": 0},
+    "estimate_cost": {"cost": 0, "hours": 0},
+    "save_plan":    {"cost": 0, "hours": 0},
+    "finish":       {"cost": 0, "hours": 0}
+  }
+}
