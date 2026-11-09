@@ -151,6 +151,10 @@ def _user_message(
         other = [a for a in adjustments if a["trigger"] == "tool_failure"]
         if other:
             msg += f" 执行中有步骤失败，已改计划继续：{'、'.join(other[0].get('changes_plain') or other[0]['changes'])}。"
+        tradeoff = [a for a in adjustments if a["trigger"] == "preference_tradeoff"]
+        if tradeoff and not constraint_adj:
+            t = tradeoff[0]
+            msg += f" 注意：质量偏好为 high，但{'、'.join(t.get('changes_plain') or t['changes'])}（模型理由：{t['model_reason']}）。"
         return msg
 
     done_steps = [s for s in (plan.steps if plan else []) if s.status == "done"]

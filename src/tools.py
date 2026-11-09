@@ -211,7 +211,26 @@ class Tools:
             return _err(e.code, e.detail)
         self.plan = plan
         self.store.save_plan(plan, args.reason)
-        return {"ok": True, "message": "计划已记录为 revision 1；执行前请先 estimate_cost", "plan": self.plan_view()}
+        # 偏好让步：high 偏好下首版就为某个脚本选了 lite，记一条说明（引用模型理由），让运营知道这是折中
+        if self.req.quality_preference == "high":
+            lites = [s for s in plan.steps if s.action == "generate_script" and s.tier == "lite"]
+            if lites:
+                from .plan import _label
+
+                est = self._estimate_now()
+                self.adjustments.append(
+                    {
+                        "trigger": "preference_tradeoff",
+                        "from_revision": 1,
+                        "to_revision": 1,
+                        "before": None,
+                        "after": {"projected_total": est.projected, "projected_finish": est.projected_finish.isoformat()},
+                        "changes": [f"{s.id} {s.deliverable.key if s.deliverable else ''} 脚本选 lite" for s in lites],
+                        "changes_plain": [f"{_label(s)}脚本采用简版" for s in lites],
+                        "model_reason": args.reason,
+                    }
+                )
+        return {"ok": True, "revision": 1, "message": "计划已记录为 revision 1；执行前请先 estimate_cost", "plan": self.plan_view()}
 
     def _revise_plan(self, args: RevisePlanArgs) -> Observation:
         if self.plan is None:
