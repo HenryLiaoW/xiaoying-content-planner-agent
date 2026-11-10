@@ -1,0 +1,4 @@
+# 脚本服务持续故障（每次调用都失败）：看模型在累计失败后是换花样还是主动 failed
+uv run python -m src.main --input examples/tool_failure_persistent/input.json --out examples/tool_failure_persistent --db out/real.db --inject generate_script:always
+# 随后可 --resume 续跑（服务恢复后）：
+uv run python -m src.main --input examples/tool_failure_persistent/input.json --out examples/tool_failure_persistent/resume --db out/real.db --resume
