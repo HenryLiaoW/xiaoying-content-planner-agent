@@ -15,7 +15,7 @@ uv sync                                   # 安装依赖（含 pytest）
 cp .env.example .env                      # 填入 LLM_API_KEY（百炼国内区）；离线 mock 不需要
 uv run python -m src.main --input examples/normal/input.json --out examples/normal        # 真实模型
 uv run python -m src.main --input examples/normal/input.json --mock --out out/mock_normal  # 离线 mock
-uv run pytest -q
+uv run pytest
 ```
 
 不用 uv：`python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt pytest`，然后把 `uv run` 去掉。

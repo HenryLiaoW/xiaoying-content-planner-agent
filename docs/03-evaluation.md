@@ -2,7 +2,7 @@
 
 两类证据，分开存放、分开标注：
 
-- **真实模型**（百炼 qwen-plus，temperature 0）：`examples/normal/` `tool_failure_once/` `over_budget/` `over_budget_b/`，由 Henry 在本机运行（2026-11-09），trace 为真实决策过程。
+- **真实模型**（百炼 qwen-plus，temperature 0）：`examples/normal/` `tool_failure_once/` `over_budget/` `over_budget_b/`（11-09）与 `examples/resume/attempt1` `attempt2`（11-10），均由 Henry 在本机运行，trace 为真实决策过程。
 - **离线 Mock**（替换模型客户端，其余全部真跑）：`examples/mock/<场景>/`，只验证流程与状态机，**不代表真实模型的决策效果**。
 
 每个场景目录：`input.json`、`output.json`、`trace.jsonl`（追加式事件）、`trace_review.json`（五要素审阅版）、`command.txt`（可复制命令）。
@@ -37,7 +37,7 @@
 | deadline_tight | 截止只剩 1.5h | pro 超期 → 模型改 lite → completed | completed，费用 3，trigger=over_deadline | — | 截止约束 |
 | duplicate | 同输入两次启动 | 第二次 `served_from=existing`，零新事件 | `test_cli.py` 通过 | 同（入口层逻辑） | 重复执行 |
 | step_limit | `--max-steps 4` | incomplete，`step_limit_reached`，可续跑 | incomplete，已完成 2 步保留 | — | 步数上限 |
-| resume | 持续失败后 `--resume` | attempt 2，s1 复用，续跑 | 待补 | — | 续跑（加分） |
+| resume | `--inject generate_script:always` 后不注入 `--resume` | attempt 2，已完成的搜索复用，只补做失败的主脚本 | `test_cli.py` 进程级两次启动通过 | **attempt1 incomplete（`step_limit_reached`，15 步）；attempt2 `--resume` completed（7 步，总费用 3）**：搜索不重做不重复计费，同一任务 attempt_no=2 | 续跑（加分）；工具持续失败 |
 
 "—" 表示该场景未用真实模型跑：Mock 已覆盖流程，真实决策以 normal / tool_failure_once / over_budget / over_budget_b 四条为准。token 用量分别约 3.5 万 / 4.1 万 / 5.8 万 / 4.1 万（终报 `llm_usage`），不计入模拟预算。
 
@@ -69,6 +69,31 @@
 1. tool_failure_once 第 4→5 步：失败观察 → 重试。
 2. over_budget 第 7→8 步：`not_saveable`（估算过期）→ 补 estimate_cost → 保存。
 3. 三组预算下三个不同计划：输入变化 → 计划变化，均非代码写死。
+
+### 续跑与持续故障（`examples/resume/attempt1`、`attempt2`）
+
+输入：预算 20、balanced、`--inject generate_script:always`（脚本服务每次都失败，失败不计费）。
+
+**attempt1（incomplete，15 步，token 约 9.2 万）。** 初始计划：第一次搜素材 + pro 档主视频脚本，估算 6。搜索成功（花 1）后，主视频脚本连续失败，模型依次：原样重试（2 次，触发重试上限）→ 降为 lite 档 → 重估 → 再试失败 → 想少传素材（实际提交的计划修改没有改变任何内容）→ 再试失败 → 想删除主脚本重建（被拒：`required_deliverable_missing`）→ 再试（被拒：`retry_limit_reached`）→ 新增第二次搜素材、改依赖、重估，动作数用满。结果：`incomplete`，原因 `step_limit_reached`；第一次搜素材的结果与 1 元费用保留，失败的 4 次尝试均未计费。
+
+代码守住的约束全部起作用：重试上限、必需交付物不可删、步数上限、不记失败为成功。
+
+**暴露的问题（如实记录）：** 脚本累计失败 4 次，模型始终没有选择 `finish(status="failed")`，而是持续换参数，把 15 步用满。当时的失败观察只写"第几次尝试失败"，没有累计次数；换档位又会重置该步骤的重试计数，模型每次都有新的尝试机会。终报是通用的"动作额度用完"，没有告诉运营"主脚本连续失败"。
+
+**attempt2（`--resume`，completed，7 步，token 约 3.5 万）。** 服务恢复。程序把已有计划、已完成步骤的结果（素材清单）和已花费 1.0 作为"续跑上下文"交给模型。模型：删除上次遗留、尚未执行的第二次搜素材（理由：冗余，省费用与工时）→ 重估（预计 3）→ 用 lite 档写主视频脚本（成功，花 2）→ 保存被拒（估算过期）→ 补估算 → 保存 → `finish(completed)`。
+
+| 检查点 | 结果 |
+|---|---|
+| 已完成的搜索是否重做 / 重复计费 | 否；账本 = 搜索 1 + 脚本 2 = 3 |
+| 是否仍是同一任务 | 是，同一 run_id，`attempt_no=2`，`served_from=resumed` |
+| 档位 | 沿用上次降级后的 lite（预算 20 本可用 pro；模型理由是"成本低、工时短、素材足以支撑简版"），属模型的合法选择 |
+
+**据此做的改进（commit `310912e`，尚未用真实模型复测）：**
+
+1. 失败观察附带本次运行的累计失败次数；累计 ≥3 次时提示"多次换参数后仍失败通常说明服务暂时不可用"（只给信息，不替模型决定）。提示词补充：换档、换素材后仍失败，可以 `finish(status="failed")` 并稍后续跑。
+2. 调整记录（`adjustments`）改存数据库并跨启动保留。attempt1 里"主脚本 pro→lite"的调整在 attempt2 终报里原本丢失，现已修复。
+
+因此 `examples/resume/` 两份记录是改进**之前**的真实行为，保留原样，不重写。
 
 ## 审核要点自查
 
