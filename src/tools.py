@@ -137,9 +137,13 @@ class Tools:
         self.plan: Optional[Plan] = store.load_plan(run_id)
         self.sim_now: datetime = datetime.fromisoformat(run["sim_now"])
         self.last_estimate: Optional[Estimate] = store.latest_estimate(run_id)
-        self.adjustments: list[dict[str, Any]] = []
+        self.adjustments: list[dict[str, Any]] = json.loads(run["adjustments_json"] or "[]")  # 跨启动保留
         self.last_obs_kind: str = "none"  # 用于推导 revise 的触发原因
         self.business_exec_count = 0
+        self.tool_failures: dict[str, int] = {}  # 本次启动内每个工具的累计失败次数（含换档位后的尝试）
+
+    def _persist_adjustments(self) -> None:
+        self.store.update_run(self.run_id, adjustments_json=json.dumps(self.adjustments, ensure_ascii=False))
 
     # ----------------------------------------------------- 入口 ----
 
@@ -230,6 +234,7 @@ class Tools:
                         "model_reason": args.reason,
                     }
                 )
+                self._persist_adjustments()
         return {"ok": True, "revision": 1, "message": "计划已记录为 revision 1；执行前请先 estimate_cost", "plan": self.plan_view()}
 
     def _revise_plan(self, args: RevisePlanArgs) -> Observation:
@@ -261,6 +266,7 @@ class Tools:
                 "model_reason": args.reason,
             }
         )
+        self._persist_adjustments()
         return {
             "ok": True,
             "revision": new_plan.revision,
@@ -350,11 +356,15 @@ class Tools:
         step.attempts += 1
         if self.injector.should_fail(tool):
             self.store.record_step_failure(self.run_id, step)
+            self.tool_failures[tool] = self.tool_failures.get(tool, 0) + 1
+            total = self.tool_failures[tool]
             return _err(
                 "tool_error",
-                f"{tool} 服务返回错误（注入故障），步骤 {step.id} 第 {step.attempts} 次尝试失败；未计费",
+                f"{tool} 服务返回错误（注入故障），步骤 {step.id} 第 {step.attempts} 次尝试失败；未计费。该服务本次运行累计失败 {total} 次"
+                + ("；多次换参数后仍失败通常说明服务暂时不可用" if total >= 3 else ""),
                 retryable=step.attempts < MAX_ATTEMPTS_PER_STEP,
                 step_id=step.id, attempts=step.attempts, attempts_left=MAX_ATTEMPTS_PER_STEP - step.attempts,
+                tool_failures_total=total,
             )
         result = produce()
         at = self.sim_now

@@ -75,11 +75,7 @@ def build_report(
                 "llm_error": "模型接口调用失败（见 trace 中的 llm_error 事件），任务未完成",
             }.get(result.reason, result.reason)
 
-    adjustments = list(tools.adjustments)
-    if saved and saved["adjustments_json"]:
-        import json
-
-        adjustments = json.loads(saved["adjustments_json"]) or adjustments
+    adjustments = list(tools.adjustments)  # 含历次启动（runs.adjustments_json），保存时快照进 saved_plans
 
     user_message = _user_message(status, result.reason, req, plan, est, saved, spent, sim_now, gap, adjustments, unfinished_reason, max_steps)
 

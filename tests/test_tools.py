@@ -82,3 +82,27 @@ def test_adjustment_records_trigger_and_changes(tools):
     a = tools.adjustments[0]
     assert a["trigger"] == "over_budget" and a["before"]["projected_total"] == 12.0 and a["after"]["projected_total"] == 8.0
     assert a["model_reason"] == "超预算 2" and a["changes_plain"]
+
+
+def test_adjustments_persist_across_restarts(store, req, tools):
+    propose(tools); tools.execute("estimate_cost", {"reason": "r"})
+    tools.execute("revise_plan", REVISE_TO_8)
+    assert len(tools.adjustments) == 1
+    from src.tools import Tools
+
+    again = Tools(store, tools.run_id, req)  # 模拟 --resume 时重新构造
+    assert again.adjustments == tools.adjustments and again.plan.revision == 2
+
+
+def test_tool_error_reports_cumulative_failures(store, req):
+    t = make_tools(store, req, ["generate_script:always"])
+    propose(t); t.execute("revise_plan", REVISE_TO_8); t.execute("estimate_cost", {"reason": "r"})
+    s = t.execute("search_materials", {"step_id": "s1", "query": "Vlog 模板 双11", "reason": "r"})
+    ids = [s["items"][0]["id"]]
+    t.execute("generate_script", {"step_id": "s3", "material_ids": ids, "brief": "b", "reason": "r"})
+    t.execute("generate_script", {"step_id": "s3", "material_ids": ids, "brief": "b", "reason": "r"})
+    t.execute("revise_plan", {"set_tier": [{"step_id": "s3", "tier": "lite"}], "reason": "换档"})  # 重试计数归零
+    t.execute("estimate_cost", {"reason": "r"})
+    third = t.execute("generate_script", {"step_id": "s3", "material_ids": ids, "brief": "b", "reason": "r"})
+    assert third["error"] == "tool_error" and third["attempts"] == 1 and third["tool_failures_total"] == 3
+    assert "服务暂时不可用" in third["message"]

@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS runs (
   steps_used INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  result_json TEXT
+  result_json TEXT,
+  adjustments_json TEXT
 );
 CREATE TABLE IF NOT EXISTS plans (
   run_id TEXT NOT NULL,
@@ -102,6 +103,12 @@ class Store:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.executescript(SCHEMA_SQL)
+        self._migrate()
+
+    def _migrate(self) -> None:
+        cols = {r['name'] for r in self.conn.execute('PRAGMA table_info(runs)').fetchall()}
+        if 'adjustments_json' not in cols:
+            self.conn.execute('ALTER TABLE runs ADD COLUMN adjustments_json TEXT')
 
     def close(self) -> None:
         self.conn.close()
