@@ -13,7 +13,7 @@ Python ≥ 3.10。推荐 [uv](https://docs.astral.sh/uv/)：
 ```sh
 uv sync                                   # 安装依赖（含 pytest）
 cp .env.example .env                      # 填入 LLM_API_KEY（百炼国内区）；离线 mock 不需要
-uv run python -m src.main --input examples/normal/input.json --out examples/normal        # 真实模型
+uv run python -m src.main --input examples/normal/input.json --out out/normal             # 真实模型（写到 out/，不覆盖 examples/ 里的存档）
 uv run python -m src.main --input examples/normal/input.json --mock --out out/mock_normal  # 离线 mock
 uv run pytest
 ```
@@ -31,6 +31,7 @@ python -m src.main dump --db PATH --run RUN_ID      # 导出某任务在库中�
 
 输出：成功与业务异常都以 JSON 返回（`status` 为 `completed | incomplete | failed | needs_input | request_conflict`），退出码 0；
 格式错误返回 `invalid_input`，退出码 2。`--out` 目录下生成 `output.json`、`trace.jsonl`（追加式事件）、`trace_review.json`（五要素审阅版）。
+终报里 `user_message` 是给运营看的白话结论（不含内部编号）；出问题时另有 `handoff_note`（转交说明），供运营转给负责排查的人。
 
 ## 项目目录
 
