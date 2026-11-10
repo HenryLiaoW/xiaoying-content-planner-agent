@@ -126,9 +126,8 @@ def run_loop(
         prev_signature = signature
         if extra:
             obs["note"] = f"每轮只接受一个动作，另外 {len(extra)} 个调用已忽略。"
-        if steps_used == max_steps - 1:
-            obs["warning_steps"] = "仅剩 1 次动作额度；如无法完成，请用 finish(status=\"incomplete\") 结束并说明原因。"
-
+        if steps_used == max_steps - 3:
+            obs["warning_steps"] = "仅剩 3 次动作额度，刚好够估算、保存、结束；如无法完成，请用 finish(status=\"incomplete\") 结束并说明原因。"
         trace.event("tool_result", step_no=steps_used, tool=call.name, ok=bool(obs.get("ok")), summary=summarize(obs))
         messages.append({"role": "tool", "tool_call_id": call.id, "content": json.dumps(obs, ensure_ascii=False)})
         for tc in extra:
