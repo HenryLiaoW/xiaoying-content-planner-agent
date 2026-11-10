@@ -68,3 +68,18 @@ def test_exit_codes(tmp_path):
     out, code = cli(["--input", write(tmp_path, "miss.json", {k: v for k, v in BASE.items() if k != "budget"}), "--db", str(tmp_path / "a.db")])
     assert code == 0 and out["status"] == "needs_input" and out["missing_fields"] == ["budget"]
     assert not (tmp_path / "a.db").exists() or True  # 入口层不建任务：由 test_loop_mock 覆盖 trace 不存在
+
+
+def test_resume_redoes_only_failed_step_and_keeps_ledger(tmp_path):
+    inp = write(tmp_path, "in.json", BASE)
+    db = str(tmp_path / "a.db")
+    first, _ = cli(["--input", inp, "--db", db, "--out", str(tmp_path / "o1"), "--mock", "--mock-script", "tool_failure_persistent", "--inject", "generate_script:always"])
+    assert first["status"] == "failed" and first["result"]["spent_cost"] == 1.0
+    second, code = cli(["--input", inp, "--db", db, "--out", str(tmp_path / "o2"), "--mock", "--mock-script", "resume", "--resume"])
+    assert code == 0 and second["status"] == "completed" and second["served_from"] == "resumed" and second["attempt_no"] == 2
+    assert second["run_id"] == first["run_id"] and second["result"]["spent_cost"] == 6.0 and second["business_exec_count"] == 1
+    steps = {s["id"]: s for s in second["result"]["plan"]["steps"]}
+    assert steps["s1"]["attempts"] == 1 and steps["s2"]["status"] == "done"
+    dump, _ = cli(["dump", "--db", db, "--run", first["run_id"]])
+    assert [(l["step_id"], l["amount"]) for l in dump["ledger"]] == [("s1", 1.0), ("s2", 5.0)]  # s1 未重复计费
+    assert len(dump["runs"]) == 1 and len(dump["saved_plans"]) == 1

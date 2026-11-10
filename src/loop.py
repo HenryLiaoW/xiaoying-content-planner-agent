@@ -89,6 +89,8 @@ def run_loop(
 
         try:
             reply = llm.chat(messages, schemas)
+        except AssertionError:  # MockMismatch：脚本与实际观察不符，测试应当失败
+            raise
         except Exception as e:  # 模型接口异常（超时、鉴权、网络）：如实记录并以 incomplete 结束，不伪造结果
             trace.event("llm_error", error=type(e).__name__, message=str(e)[:300], llm_round=rounds + 1)
             return LoopResult("incomplete", "llm_error", steps_used, rounds, usage=usage)

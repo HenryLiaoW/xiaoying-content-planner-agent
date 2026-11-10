@@ -166,3 +166,17 @@ def get_script(name: str) -> list[MockStep]:
     if name not in SCRIPTS:
         raise KeyError(f"未知的 mock 脚本 {name!r}；可选：{sorted(SCRIPTS)}")
     return SCRIPTS[name]()
+
+
+def resume() -> list[MockStep]:
+    """续跑：计划已存在、s1 已完成、s2 失败计数已归零；先估算再只重做 s2。"""
+    return [
+        {"tool": "estimate_cost", "args": {"reason": "续跑：先确认当前计划与费用"}},
+        {"tool": "search_materials", "args": {"step_id": "s1", "query": "Vlog 模板 双11", "reason": "取回已完成搜索的结果用于选素材"},
+         "expect_prev": {"ok": True, "within_budget": True}},
+        _gen("s2", "主视频脚本", "依赖 s1 已完成，重做失败的主脚本", expect={"ok": True, "already_done": True}),
+        *_tail(),
+    ]
+
+
+SCRIPTS["resume"] = resume

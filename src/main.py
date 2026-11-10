@@ -176,8 +176,19 @@ def run_request(args: argparse.Namespace) -> int:
                     store.set_step_status(run_id, s)
             tools.sim_now = max(tools.sim_now, req.now)
             store.update_run(run_id, sim_now=tools.sim_now)
-            extra_ctx = "续跑上下文（这是第 %d 次启动）：以下计划已存在，已完成步骤与费用已保留，失败步骤的重试计数已重置。当前计划：%s\n已花费：%s。请先 estimate_cost 再继续。" % (
-                attempt_no, json.dumps(tools.plan_view(), ensure_ascii=False), tools.spent())
+            done_results = {}
+            for s in tools.plan.steps:
+                if s.status == "done":
+                    r = store.step_result(run_id, s.id) or {}
+                    if s.action == "search_materials":
+                        done_results[s.id] = {"query": r.get("query"), "items": [{"id": m["id"], "title": m["title"]} for m in r.get("items", [])]}
+                    else:
+                        done_results[s.id] = {"script_title": (r.get("script") or {}).get("title"), "material_refs": (r.get("script") or {}).get("material_refs")}
+            extra_ctx = (
+                "续跑上下文（这是第 %d 次启动）：以下计划已存在，已完成步骤与费用已保留，失败步骤的重试计数已重置。"
+                "当前计划：%s\n已完成步骤的结果：%s\n已花费：%s。请先 estimate_cost 再继续；不要重做已完成的步骤。"
+                % (attempt_no, json.dumps(tools.plan_view(), ensure_ascii=False), json.dumps(done_results, ensure_ascii=False), tools.spent())
+            )
 
     trace = Trace(out_dir / "trace.jsonl", run_id, attempt_no)
     trace.event("run_start", mode=mode, served_from=served_from, request=normalized(req), inject=args.inject, max_steps=args.max_steps, model=model_info.get("model"))

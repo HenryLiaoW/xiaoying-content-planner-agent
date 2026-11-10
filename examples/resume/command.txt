@@ -1,0 +1,4 @@
+# 第 1 次：脚本服务持续故障 → failed（搜索结果与费用保留）
+python -m src.main --input examples/resume/input.json --out examples/resume/attempt1 --db out/real.db --inject generate_script:always
+# 第 2 次：同一输入 + --resume，不再注入 → 只重做失败的主脚本 → completed
+python -m src.main --input examples/resume/input.json --out examples/resume/attempt2 --db out/real.db --resume
