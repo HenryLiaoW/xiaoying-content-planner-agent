@@ -1,0 +1,168 @@
+[
+  {
+    "step": 1,
+    "attempt_no": 2,
+    "tool": "revise_plan",
+    "args": {
+      "set_depends": [
+        {
+          "step_id": "s2",
+          "depends_on": [
+            "s1"
+          ]
+        }
+      ],
+      "remove": [
+        "s3"
+      ]
+    },
+    "result_summary": {
+      "ok": true,
+      "message": "计划已更新为 revision 5；执行前必须重新 estimate_cost",
+      "revision": 5,
+      "changed": [
+        "s2 依赖 ['s3']→['s1']",
+        "删除 s3 搜索（-1）"
+      ],
+      "plan": {
+        "revision": 5,
+        "steps": [
+          "s1:search_materials=done",
+          "s2:generate_script/lite=pending"
+        ]
+      }
+    },
+    "next_action": "estimate_cost()",
+    "decision_basis": "主脚本 s2 必须依赖已完成搜索 s1；s3 冗余且未执行，删除以节省费用与工时"
+  },
+  {
+    "step": 2,
+    "attempt_no": 2,
+    "tool": "estimate_cost",
+    "args": {},
+    "result_summary": {
+      "ok": true,
+      "message": "在预算与截止时间内，可以执行",
+      "spent_cost": 1.0,
+      "sim_now": "2026-11-10T09:30:00+08:00",
+      "revision": 5,
+      "projected_total": 3.0,
+      "remaining_estimate": 2.0,
+      "within_budget": true,
+      "within_deadline": true,
+      "over_budget_by": 0.0,
+      "over_time_hours": 0.0,
+      "min_feasible_cost": 3.0
+    },
+    "next_action": "generate_script(step_id=\"s2\", material_ids=[\"m01\", \"m02\", \"m03\", \"m10\", \"m06\", \"…, brief=\"双11推广主视频\")",
+    "decision_basis": "修正依赖后需重新估算，确保在预算与截止时间内"
+  },
+  {
+    "step": 3,
+    "attempt_no": 2,
+    "tool": "generate_script",
+    "args": {
+      "step_id": "s2",
+      "material_ids": [
+        "m01",
+        "m02",
+        "m03",
+        "m10",
+        "m06",
+        "m07"
+      ],
+      "brief": "双11推广主视频"
+    },
+    "result_summary": {
+      "ok": true,
+      "status": "done",
+      "charged": 2.0,
+      "spent_cost": 3.0,
+      "sim_now": "2026-11-10T10:30:00+08:00",
+      "script": {
+        "tier": "lite",
+        "title": "一键 Vlog 模板双11推广｜双11推广主视频",
+        "scenes": null,
+        "material_refs": [
+          "m01",
+          "m02",
+          "m03",
+          "m10",
+          "m06",
+          "m07"
+        ]
+      }
+    },
+    "next_action": "save_plan()",
+    "decision_basis": "主脚本必须依赖 s1 搜索结果；lite 档位成本低、工时短，且 s1 素材已覆盖场景、卖点、节拍等核心要素，足以支撑简版脚本"
+  },
+  {
+    "step": 4,
+    "attempt_no": 2,
+    "tool": "save_plan",
+    "args": {},
+    "result_summary": {
+      "ok": false,
+      "error": "not_saveable",
+      "message": "尚不满足保存条件：估算已过期（估算时已花费 1 / 剩余 2，账本已花费 3），保存前请重新 estimate_cost",
+      "problems": [
+        "估算已过期（估算时已花费 1 / 剩余 2，账本已花费 3），保存前请重新 estimate_cost"
+      ]
+    },
+    "next_action": "estimate_cost()",
+    "decision_basis": "主脚本已生成，必需交付物齐备，估算显示在预算与截止时间内，可保存"
+  },
+  {
+    "step": 5,
+    "attempt_no": 2,
+    "tool": "estimate_cost",
+    "args": {},
+    "result_summary": {
+      "ok": true,
+      "message": "在预算与截止时间内，可以执行",
+      "spent_cost": 3.0,
+      "sim_now": "2026-11-10T10:30:00+08:00",
+      "revision": 5,
+      "projected_total": 3.0,
+      "remaining_estimate": 0.0,
+      "within_budget": true,
+      "within_deadline": true,
+      "over_budget_by": 0.0,
+      "over_time_hours": 0.0,
+      "min_feasible_cost": 3.0
+    },
+    "next_action": "save_plan()",
+    "decision_basis": "save_plan 要求估算新鲜，需同步最新花费（3.0）与剩余资源"
+  },
+  {
+    "step": 6,
+    "attempt_no": 2,
+    "tool": "save_plan",
+    "args": {},
+    "result_summary": {
+      "ok": true,
+      "message": "方案已保存",
+      "spent_cost": 3.0,
+      "revision": 5,
+      "saved": "created"
+    },
+    "next_action": "finish(status=\"completed\", summary=\"一键Vlog模板双11推广内容活动方案已生成并保存，含主视频脚本，成本3…)",
+    "decision_basis": "所有必需步骤完成，估算新鲜且合规，可保存"
+  },
+  {
+    "step": 7,
+    "attempt_no": 2,
+    "tool": "finish",
+    "args": {
+      "status": "completed",
+      "summary": "一键Vlog模板双11推广内容活动方案已生成并保存，含主视频脚本，成本3元，耗时1.5小时"
+    },
+    "result_summary": {
+      "ok": true,
+      "status": "completed",
+      "accepted": true
+    },
+    "next_action": "(end)",
+    "decision_basis": "方案已保存，所有硬约束满足，预算与时间均充裕"
+  }
+]
