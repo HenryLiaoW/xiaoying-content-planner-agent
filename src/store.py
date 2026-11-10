@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS steps (
   cost REAL NOT NULL DEFAULT 0,
   hours REAL NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL,
+  failures_json TEXT,
   PRIMARY KEY (run_id, step_id)
 );
 CREATE TABLE IF NOT EXISTS estimates (
@@ -109,6 +110,9 @@ class Store:
         cols = {r['name'] for r in self.conn.execute('PRAGMA table_info(runs)').fetchall()}
         if 'adjustments_json' not in cols:
             self.conn.execute('ALTER TABLE runs ADD COLUMN adjustments_json TEXT')
+        cols = {r['name'] for r in self.conn.execute('PRAGMA table_info(steps)').fetchall()}
+        if 'failures_json' not in cols:
+            self.conn.execute('ALTER TABLE steps ADD COLUMN failures_json TEXT')
 
     def close(self) -> None:
         self.conn.close()
@@ -188,12 +192,12 @@ class Store:
     def _upsert_step(self, cur: sqlite3.Cursor, run_id: str, s: Step, ts: str) -> None:
         spec = s.model_dump(include={"id", "action", "tier", "query", "brief", "depends_on", "deliverable"})
         cur.execute(
-            "INSERT INTO steps (run_id, step_id, action, tier, spec_json, status, attempts, result_json, cost, hours, updated_at) "
-            "VALUES (?,?,?,?,?,?,?,COALESCE((SELECT result_json FROM steps WHERE run_id=? AND step_id=?), NULL),?,?,?) "
+            "INSERT INTO steps (run_id, step_id, action, tier, spec_json, status, attempts, result_json, cost, hours, updated_at, failures_json) "
+            "VALUES (?,?,?,?,?,?,?,COALESCE((SELECT result_json FROM steps WHERE run_id=? AND step_id=?), NULL),?,?,?,?) "
             "ON CONFLICT(run_id, step_id) DO UPDATE SET action=excluded.action, tier=excluded.tier, spec_json=excluded.spec_json, "
-            "status=excluded.status, attempts=excluded.attempts, cost=excluded.cost, hours=excluded.hours, updated_at=excluded.updated_at",
+            "status=excluded.status, attempts=excluded.attempts, cost=excluded.cost, hours=excluded.hours, updated_at=excluded.updated_at, failures_json=excluded.failures_json",
             (run_id, s.id, s.action, s.tier, json.dumps(spec, ensure_ascii=False), s.status, s.attempts,
-             run_id, s.id, s.cost, s.hours, ts),
+             run_id, s.id, s.cost, s.hours, ts, json.dumps(s.failures, ensure_ascii=False)),
         )
 
     def load_plan(self, run_id: str) -> Optional[Plan]:
@@ -215,6 +219,7 @@ class Store:
                 s.attempts = r["attempts"]
                 s.cost = r["cost"]
                 s.hours = r["hours"]
+                s.failures = json.loads(r["failures_json"]) if r["failures_json"] else {}
                 s.result_ref = f"res_{run_id}_{s.id}" if r["result_json"] else None
         return plan
 

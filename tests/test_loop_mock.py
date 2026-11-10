@@ -75,3 +75,13 @@ def test_ledger_equals_sum_of_done_steps(tmp_path):
     done = [s for s in out["result"]["plan"]["steps"] if s["status"] == "done"]
     assert sum(s["cost"] for s in done) == out["result"]["spent_cost"] == 8.0
     assert [s["id"] for s in out["result"]["plan"]["steps"]] == ["s1", "s3", "s4"]
+
+
+@pytest.mark.parametrize("name", list(SCENARIOS))
+def test_user_message_has_no_internal_ids(name, tmp_path):
+    """给运营的话里不出现步骤编号、工具名等内部名称。"""
+    import re
+
+    (out, _), _ = run_scenario(name, tmp_path)
+    msg = out.get("user_message") or ""
+    assert not re.search(r"\bs\d+\b|generate_script|search_materials|\bmain\b", msg), msg

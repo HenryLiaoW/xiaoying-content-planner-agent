@@ -1,5 +1,5 @@
 {
-  "run_id": "run_48eeba8141ee",
+  "run_id": "run_d811e8ca5acb",
   "request_id": "req-infeasible-001",
   "fingerprint": "391c574cb3261cd664c5c68d02fa5aa938c7043df77270fd78c306701c9da802",
   "attempt_no": 1,
@@ -99,6 +99,7 @@
       "result_summary": {
         "ok": true,
         "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "revision": 1,
         "plan": {
           "revision": 1,
           "steps": [

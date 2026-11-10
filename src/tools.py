@@ -355,6 +355,8 @@ class Tools:
         self.business_exec_count += 1
         step.attempts += 1
         if self.injector.should_fail(tool):
+            fkey = step.tier or "search"
+            step.failures[fkey] = step.failures.get(fkey, 0) + 1
             self.store.record_step_failure(self.run_id, step)
             self.tool_failures[tool] = self.tool_failures.get(tool, 0) + 1
             total = self.tool_failures[tool]

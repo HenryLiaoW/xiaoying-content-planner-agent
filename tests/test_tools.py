@@ -106,3 +106,22 @@ def test_tool_error_reports_cumulative_failures(store, req):
     third = t.execute("generate_script", {"step_id": "s3", "material_ids": ids, "brief": "b", "reason": "r"})
     assert third["error"] == "tool_error" and third["attempts"] == 1 and third["tool_failures_total"] == 3
     assert "服务暂时不可用" in third["message"]
+
+
+def test_step_failures_survive_tier_change_and_reload(store, req):
+    """换档位只重置重试计数；累计失败次数按档位保留，重新加载后仍在。"""
+    from src.report import _failure_count, _step_name
+
+    t = make_tools(store, req, ["generate_script:always"])
+    propose(t); t.execute("revise_plan", REVISE_TO_8); t.execute("estimate_cost", {"reason": "r"})
+    s = t.execute("search_materials", {"step_id": "s1", "query": "Vlog 模板 双11", "reason": "r"})
+    ids = [s["items"][0]["id"]]
+    call = {"step_id": "s3", "material_ids": ids, "brief": "b", "reason": "r"}
+    t.execute("generate_script", call); t.execute("generate_script", call)
+    t.execute("revise_plan", {"set_tier": [{"step_id": "s3", "tier": "lite"}], "reason": "换档"})
+    t.execute("estimate_cost", {"reason": "r"})
+    t.execute("generate_script", call); t.execute("generate_script", call)
+    step = store.load_plan(t.run_id).get("s3")
+    assert step.attempts == 2 and step.failures == {"pro": 2, "lite": 2}
+    assert _failure_count(step) == "累计失败 4 次（完整版 2 次、简版 2 次）"
+    assert _step_name(step) == "主视频脚本生成"

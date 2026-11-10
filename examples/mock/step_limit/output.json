@@ -1,5 +1,5 @@
 {
-  "run_id": "run_a9cb4880dfb2",
+  "run_id": "run_c8cfff13789b",
   "request_id": "req-step-limit-001",
   "fingerprint": "2ad872774cba03c9dee6fe65f2012e470b71cc9ed5f2f2595ff17d1df2876476",
   "attempt_no": 1,
@@ -199,7 +199,7 @@
     "gap": null
   },
   "adjustments": [],
-  "user_message": "已用完 4 次动作额度，任务未完成；已完成的 2 个步骤（s1, s2）及其结果已保留，可用 --resume 继续。",
+  "user_message": "已用完 4 次动作额度，任务未完成；已完成的 2 个步骤（素材搜索「Vlog 模板 双11」、主视频脚本生成）及其结果已保留，可用 --resume 继续。",
   "model_summary": null,
   "llm_usage": {
     "prompt_tokens": 0,
@@ -249,6 +249,7 @@
       "result_summary": {
         "ok": true,
         "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "revision": 1,
         "plan": {
           "revision": 1,
           "steps": [

@@ -154,7 +154,7 @@ def _user_message(
         return msg
 
     done_steps = [s for s in (plan.steps if plan else []) if s.status == "done"]
-    kept = f"已完成的 {len(done_steps)} 个步骤（{', '.join(s.id for s in done_steps)}）及其结果已保留" if done_steps else "尚无已完成步骤"
+    kept = f"已完成的 {len(done_steps)} 个步骤（{'、'.join(_step_name(s) for s in done_steps)}）及其结果已保留" if done_steps else "尚无已完成步骤"
     if gap is not None and est is not None:
         return (
             f"未能生成方案：最低交付（一次素材搜索 + 一份简版主脚本）至少需要 {_g(est.min_feasible_cost)}，"
@@ -170,15 +170,30 @@ def _user_message(
     if reason == "llm_error":
         return f"模型接口调用失败，任务未完成；{kept}，检查网络或密钥后可用 --resume 继续。"
     if status == "failed":
-        from .plan import _label
-
         failed = [s for s in (plan.steps if plan else []) if s.status == "failed"]
-        what = "；".join(
-            f"{(_label(s) + '脚本生成') if s.action == 'generate_script' else '素材搜索'}连续 {s.attempts} 次失败" for s in failed
-        ) or (unfinished_reason or "执行失败")
+        what = "；".join(f"{_step_name(s)}{_failure_count(s)}" for s in failed) or "执行失败"
         return (
             f"未能完成方案：{what}。{kept}，已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
             f"你可以稍后用 --resume 重试（只会重做失败的步骤，不重复计费）；若仍失败，请联系脚本生成服务的负责人。"
-            + (f" 模型说明：{unfinished_reason}" if unfinished_reason else "")
         )
-    return f"任务未完成：{unfinished_reason or reason}。{kept}，可用 --resume 继续。已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
+    return f"任务未完成。{kept}，可用 --resume 继续。已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
+
+
+def _step_name(s: Any) -> str:
+    """给运营看的步骤名：不出现内部编号。"""
+    from .plan import _label
+
+    if s.action == "generate_script":
+        return f"{_label(s)}脚本生成"
+    return f"素材搜索「{s.query}」" if s.query else "素材搜索"
+
+
+def _failure_count(s: Any) -> str:
+    """累计失败次数（含换档位之前的尝试），多档位时分开列出。"""
+    from .plan import TIER_NAMES
+
+    total = sum(s.failures.values()) or s.attempts
+    if len(s.failures) > 1:
+        parts = "、".join(f"{TIER_NAMES.get(k, k)} {v} 次" for k, v in s.failures.items())
+        return f"累计失败 {total} 次（{parts}）"
+    return f"累计失败 {total} 次"

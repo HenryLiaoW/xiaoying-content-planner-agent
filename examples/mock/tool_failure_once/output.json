@@ -1,5 +1,5 @@
 {
-  "run_id": "run_1a924842517b",
+  "run_id": "run_675ef2915867",
   "request_id": "req-tool-failure-once-001",
   "fingerprint": "2ad872774cba03c9dee6fe65f2012e470b71cc9ed5f2f2595ff17d1df2876476",
   "attempt_no": 1,
@@ -269,6 +269,7 @@
       "result_summary": {
         "ok": true,
         "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "revision": 1,
         "plan": {
           "revision": 1,
           "steps": [
@@ -346,7 +347,7 @@
       "result_summary": {
         "ok": false,
         "error": "tool_error",
-        "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 1 次尝试失败；未计费",
+        "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 1 次尝试失败；未计费。该服务本次运行累计失败 1 次",
         "attempts": 1,
         "attempts_left": 1
       },

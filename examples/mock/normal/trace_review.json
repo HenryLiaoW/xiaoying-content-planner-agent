@@ -41,6 +41,7 @@
     "result_summary": {
       "ok": true,
       "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+      "revision": 1,
       "plan": {
         "revision": 1,
         "steps": [

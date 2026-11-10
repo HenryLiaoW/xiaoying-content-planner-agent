@@ -41,6 +41,7 @@
     "result_summary": {
       "ok": true,
       "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+      "revision": 1,
       "plan": {
         "revision": 1,
         "steps": [
@@ -118,7 +119,7 @@
     "result_summary": {
       "ok": false,
       "error": "tool_error",
-      "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 1 次尝试失败；未计费",
+      "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 1 次尝试失败；未计费。该服务本次运行累计失败 1 次",
       "attempts": 1,
       "attempts_left": 1
     },

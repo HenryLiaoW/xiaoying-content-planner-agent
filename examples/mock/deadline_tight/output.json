@@ -1,5 +1,5 @@
 {
-  "run_id": "run_eb014e87c508",
+  "run_id": "run_6ee76190d89f",
   "request_id": "req-deadline-tight-001",
   "fingerprint": "42d01aca5a9cf3a5a726a80dadf3562975c5810a29d8c7242680559bffee3965",
   "attempt_no": 1,
@@ -225,6 +225,7 @@
       "result_summary": {
         "ok": true,
         "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "revision": 1,
         "plan": {
           "revision": 1,
           "steps": [

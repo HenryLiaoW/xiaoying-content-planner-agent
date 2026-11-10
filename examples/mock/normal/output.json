@@ -1,5 +1,5 @@
 {
-  "run_id": "run_e39fbe293054",
+  "run_id": "run_ccc6f7d5971b",
   "request_id": "req-normal-001",
   "fingerprint": "2ad872774cba03c9dee6fe65f2012e470b71cc9ed5f2f2595ff17d1df2876476",
   "attempt_no": 1,
@@ -269,6 +269,7 @@
       "result_summary": {
         "ok": true,
         "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
+        "revision": 1,
         "plan": {
           "revision": 1,
           "steps": [

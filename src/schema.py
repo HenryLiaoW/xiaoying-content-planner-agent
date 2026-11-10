@@ -170,6 +170,7 @@ class Step(StepSpec):
 
     status: StepStatus = "pending"
     attempts: int = 0
+    failures: dict[str, int] = Field(default_factory=dict, description="累计失败次数，按档位（或 search）分开记；换档位、续跑都不清零")
     result_ref: Optional[str] = None
     cost: float = 0.0
     hours: float = 0.0
