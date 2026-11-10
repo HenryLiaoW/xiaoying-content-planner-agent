@@ -1,0 +1,2 @@
+# 截止时间只剩 1.5 小时：搜素材 0.5h + 完整版脚本 2h 来不及，搜素材 0.5h + 简版脚本 1h 刚好
+uv run python -m src.main --input examples/deadline_tight/input.json --out examples/deadline_tight --db out/real.db

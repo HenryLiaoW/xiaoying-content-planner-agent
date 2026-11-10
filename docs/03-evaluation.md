@@ -2,7 +2,7 @@
 
 两类证据，分开存放、分开标注：
 
-- **真实模型**（百炼 qwen-plus，temperature 0）：`examples/normal/` `tool_failure_once/` `over_budget/` `over_budget_b/`（11-09）与 `examples/resume/attempt1` `attempt2`、`examples/tool_failure_persistent/`（11-10），均由 Henry 在本机运行，trace 为真实决策过程。
+- **真实模型**（百炼 qwen-plus，temperature 0）：`examples/normal/` `tool_failure_once/` `over_budget/` `over_budget_b/`（11-09）与 `examples/resume/attempt1` `attempt2`、`examples/tool_failure_persistent/`、`examples/deadline_tight/`（11-10），均由 Henry 在本机运行，trace 为真实决策过程。
 - **离线 Mock**（替换模型客户端，其余全部真跑）：`examples/mock/<场景>/`，只验证流程与状态机，**不代表真实模型的决策效果**。
 
 每个场景目录：`input.json`、`output.json`、`trace.jsonl`（追加式事件）、`trace_review.json`（五要素审阅版）、`command.txt`（可复制命令）。
@@ -34,12 +34,12 @@
 | missing_deadline | 无 deadline | `needs_input` | needs_input | 同 | 缺截止时间 |
 | invalid_input | budget 为字符串 | `invalid_input`，退出码 2 | 退出码 2 | 同 | 格式 |
 | no_materials | 主题无命中 | 空结果观察 → 模型补搜 → completed | completed，费用 4，trigger=no_materials | — | 素材不足不伪造 |
-| deadline_tight | 截止只剩 1.5h | pro 超期 → 模型改 lite → completed | completed，费用 3，trigger=over_deadline | — | 截止约束 |
+| deadline_tight | 截止只剩 1.5h | pro 超期 → 模型改 lite → completed | completed，费用 3，trigger=over_deadline | **completed，9 步，费用 3**：首版完整版主脚本 → 估算超时 1 小时 → 模型改为简版 → 再估算通过 → 执行 → 保存；终报记 `over_deadline` | 截止约束；估算后重规划 |
 | duplicate | 同输入两次启动 | 第二次 `served_from=existing`，零新事件 | `test_cli.py` 通过 | 同（入口层逻辑） | 重复执行 |
 | step_limit | `--max-steps 4` | incomplete，`step_limit_reached`，可续跑 | incomplete，已完成 2 步保留 | — | 步数上限 |
 | resume | `--inject generate_script:always` 后不注入 `--resume` | attempt 2，已完成的搜索复用，只补做失败的主脚本 | `test_cli.py` 进程级两次启动通过 | **attempt1 incomplete（`step_limit_reached`，15 步）；attempt2 `--resume` completed（7 步，总费用 3）**：搜索不重做不重复计费，同一任务 attempt_no=2 | 续跑（加分）；工具持续失败 |
 
-"—" 表示该场景未用真实模型跑：Mock 已覆盖流程，真实决策以 normal / tool_failure_once / over_budget / over_budget_b / tool_failure_persistent / resume 为准。token 用量分别约 3.5 万 / 4.1 万 / 5.8 万 / 4.1 万（终报 `llm_usage`），不计入模拟预算。
+"—" 表示该场景未用真实模型跑：Mock 已覆盖流程，真实决策以 normal / tool_failure_once / over_budget / over_budget_b / tool_failure_persistent / resume / deadline_tight 为准。token 用量分别约 3.5 万 / 4.1 万 / 5.8 万 / 4.1 万（终报 `llm_usage`），不计入模拟预算。
 
 ## 真实模型路径（≥2 条，含五要素）
 
@@ -62,13 +62,32 @@
 | 10 / high | 2 搜索 + pro 主脚本 + lite 预热 | 9 | 直接完成；第 7 步跳过估算直接保存被拒，补估算后保存 |
 | 8 / high | 1 搜索 + pro 主脚本 + lite 预热 | 8 | 直接完成；终报记 `preference_tradeoff`（high 偏好下预热选 lite） |
 
-预算每降一档模型砍掉一项不影响必需交付的步骤，reason 均提到预算约束。我们如实记录：真实模型的预算意识体现在规划阶段；"超预算 → 执行被拒 → revise_plan → 再估算 → 保存"这条路径由离线场景 `mock/over_budget`、`mock/deadline_tight` 与 `test_tools.py` / `test_plan.py` 覆盖，代码路径是通的，只是真实模型没有走到。
+预算每降一档模型砍掉一项不影响必需交付的步骤，reason 均提到预算约束。我们如实记录：真实模型的预算意识体现在规划阶段；"超预算 → 执行被拒 → revise_plan → 再估算 → 保存"这条路径由离线场景 `mock/over_budget`、`mock/deadline_tight` 与 `test_tools.py` / `test_plan.py` 覆盖，代码路径是通的，只是真实模型在**预算**约束下没有走到。同一条路径在**截止时间**约束下由真实模型走到了，见下节。
 
 ### 真实路径中"观察 → 调整"的实证
 
 1. tool_failure_once 第 4→5 步：失败观察 → 重试。
 2. over_budget 第 7→8 步：`not_saveable`（估算过期）→ 补 estimate_cost → 保存。
 3. 三组预算下三个不同计划：输入变化 → 计划变化，均非代码写死。
+4. deadline_tight 第 2→3 步：估算超时 1 小时 → 主视频脚本改简版 → 再估算通过。
+5. tool_failure_persistent 第 9→10 步：累计失败 4 次 → 主动 `finish(failed)`。
+
+### 截止时间重规划（`examples/deadline_tight/`）
+
+输入：预算 20，模拟当前 09:00，截止 10:30（只剩 1.5 小时）。9 个动作，0 次被拒，token 约 4.5 万。
+
+| 步 | 动作 | 结果 | 模型理由 |
+|---|---|---|---|
+| 1 | 拟计划：一次素材搜索 + 完整版主视频脚本 | 记为第 1 版 | 满足必需交付物 |
+| 2 | 估算 | 预计 11:30 完成，**晚于截止 1 小时**；预算内 | — |
+| 3 | 改计划：主视频脚本完整版 → 简版 | 第 2 版 | "节省 1 小时工时，确保在截止时间内完成" |
+| 4 | 再估算 | 预计 10:30 完成，通过 | — |
+| 5–6 | 素材搜索、写简版主视频脚本 | 花 1 + 2 = 3，模拟时间 10:30 | — |
+| 7–9 | 估算、保存、结束 | completed | — |
+
+这是真实模型走出的"估算不通过 → 改计划 → 再估算 → 执行 → 保存"完整路径。调整发生在任何费用产生之前。终报给运营的话："原方案预计 11-10 11:30 完成，晚于截止时间，已调整为主视频脚本由完整版改为简版——这是时间不足下的调整结果。"
+
+与预算实验对照：预算紧时模型在拟计划阶段就避开了超限，时间紧时却先拟了超时的方案再靠估算纠正。单次运行，不对原因下结论；可见的事实是估算这道检查在真实运行中起了作用。
 
 ### 续跑与持续故障（`examples/resume/attempt1`、`attempt2`）
 
