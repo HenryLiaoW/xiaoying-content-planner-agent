@@ -1,5 +1,5 @@
 {
-  "run_id": "run_6ee76190d89f",
+  "run_id": "run_319cc8eda28a",
   "request_id": "req-deadline-tight-001",
   "fingerprint": "42d01aca5a9cf3a5a726a80dadf3562975c5810a29d8c7242680559bffee3965",
   "attempt_no": 1,
@@ -189,6 +189,7 @@
     }
   ],
   "user_message": "方案已保存，费用 3 / 预算 20，预计 11-10 10:30 完成。 注意：原方案预计 11-10 11:30 完成，晚于截止时间，已调整为 主视频脚本由完整版改为简版——这是时间不足下的调整结果。",
+  "handoff_note": null,
   "model_summary": "方案已保存",
   "llm_usage": {
     "prompt_tokens": 0,

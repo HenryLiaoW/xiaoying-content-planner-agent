@@ -1,5 +1,5 @@
 {
-  "run_id": "run_d811e8ca5acb",
+  "run_id": "run_be0cff9f25ec",
   "request_id": "req-infeasible-001",
   "fingerprint": "391c574cb3261cd664c5c68d02fa5aa938c7043df77270fd78c306701c9da802",
   "attempt_no": 1,
@@ -63,6 +63,7 @@
   },
   "adjustments": [],
   "user_message": "未能生成方案：最低交付（一次素材搜索 + 一份简版主脚本）至少需要 3，预算为 2，缺口 1。可将预算提高到 3 后重新提交。",
+  "handoff_note": null,
   "model_summary": "预算不足以完成最低交付",
   "llm_usage": {
     "prompt_tokens": 0,

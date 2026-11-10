@@ -1,5 +1,5 @@
 {
-  "run_id": "run_e3312b7b79f3",
+  "run_id": "run_aa66ba54e146",
   "request_id": "req-no-materials-001",
   "fingerprint": "ffc40a1318f8ead5324b2952d54748f0547c1d4a301b29e4e23dfcfc3f54e438",
   "attempt_no": 1,
@@ -207,6 +207,7 @@
     }
   ],
   "user_message": "方案已保存，费用 4 / 预算 20，预计 11-10 11:00 完成。",
+  "handoff_note": null,
   "model_summary": "方案已保存",
   "llm_usage": {
     "prompt_tokens": 0,

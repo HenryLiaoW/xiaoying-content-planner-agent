@@ -1,5 +1,5 @@
 {
-  "run_id": "run_436463c20805",
+  "run_id": "run_7694c911b158",
   "request_id": "req-over-budget-001",
   "fingerprint": "0b11f680a85d6296ca8d9b041fb67245bafd7504d925c1d538b6b1c608db2c8e",
   "attempt_no": 1,
@@ -244,6 +244,7 @@
     }
   ],
   "user_message": "方案已保存，费用 8 / 预算 10，预计 11-10 12:30 完成。 注意：原方案预计 12，超出预算 2，已调整为 预热脚本由完整版改为简版、减少一次素材搜索，预计 8——这是预算不足下的调整结果。",
+  "handoff_note": null,
   "model_summary": "方案已保存",
   "llm_usage": {
     "prompt_tokens": 0,

@@ -78,6 +78,7 @@ def build_report(
     adjustments = list(tools.adjustments)  # 含历次启动（runs.adjustments_json），保存时快照进 saved_plans
 
     user_message = _user_message(status, result.reason, req, plan, est, saved, spent, sim_now, gap, adjustments, unfinished_reason, max_steps)
+    handoff_note = _handoff_note(status, result.reason, run_id, req, run["attempt_no"], plan, spent, unfinished_reason, bool(result.finish_args), max_steps)
 
     report: dict[str, Any] = {
         "run_id": run_id,
@@ -109,6 +110,7 @@ def build_report(
         },
         "adjustments": adjustments,
         "user_message": user_message,
+        "handoff_note": handoff_note,
         "model_summary": (result.finish_args or {}).get("summary"),
         "llm_usage": result.usage,
         "trace_review": trace.review(),
@@ -150,7 +152,7 @@ def _user_message(
         tradeoff = [a for a in adjustments if a["trigger"] == "preference_tradeoff"]
         if tradeoff and not constraint_adj:
             t = tradeoff[0]
-            msg += f" 注意：质量偏好为 high，但{'、'.join(t.get('changes_plain') or t['changes'])}（模型理由：{t['model_reason']}）。"
+            msg += f" 注意：质量偏好为 high，但{'、'.join(t.get('changes_plain') or t['changes'])}。"
         return msg
 
     done_steps = [s for s in (plan.steps if plan else []) if s.status == "done"]
@@ -166,15 +168,15 @@ def _user_message(
             f"截止时间 {_fmt_dt(req.deadline)} 来不及。可放宽截止时间后重新提交。{kept}。"
         )
     if reason == "step_limit_reached":
-        return f"已用完 {max_steps} 次动作额度，任务未完成；{kept}，可用 --resume 继续。"
+        return f"已用完 {max_steps} 次动作额度，任务未完成；{kept}，可用 --resume 继续。{_HANDOFF_HINT}"
     if reason == "llm_error":
-        return f"模型接口调用失败，任务未完成；{kept}，检查网络或密钥后可用 --resume 继续。"
+        return f"模型接口调用失败，任务未完成；{kept}，检查网络或密钥后可用 --resume 继续。{_HANDOFF_HINT}"
     if status == "failed":
         failed = [s for s in (plan.steps if plan else []) if s.status == "failed"]
         what = "；".join(f"{_step_name(s)}{_failure_count(s)}" for s in failed) or "执行失败"
         return (
             f"未能完成方案：{what}。{kept}，已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
-            f"你可以稍后用 --resume 重试（只会重做失败的步骤，不重复计费）；若仍失败，请联系脚本生成服务的负责人。"
+            f"你可以稍后用 --resume 重试（只会重做失败的步骤，不重复计费）；若仍失败，请把下面的“转交说明”发给相关服务的负责人。"
         )
     return f"任务未完成。{kept}，可用 --resume 继续。已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
 
@@ -197,3 +199,50 @@ def _failure_count(s: Any) -> str:
         parts = "、".join(f"{TIER_NAMES.get(k, k)} {v} 次" for k, v in s.failures.items())
         return f"累计失败 {total} 次（{parts}）"
     return f"累计失败 {total} 次"
+
+
+_HANDOFF_HINT = "若多次续跑仍未完成，请把下面的“转交说明”发给负责人。"
+_TOOL_OF = {"generate_script": "generate_script（脚本生成）", "search_materials": "search_materials（素材搜索）"}
+
+
+def _handoff_note(
+    status: str,
+    reason: str,
+    run_id: str,
+    req: Request,
+    attempt_no: int,
+    plan: Any,
+    spent: float,
+    unfinished_reason: Optional[str],
+    reason_from_model: bool,
+    max_steps: int,
+) -> Optional[str]:
+    """转交说明：只在出问题时生成，给负责排查的人看，可直接转发；允许出现内部名称。
+
+    内容由代码从数据库拼出；只有“模型说明”一行是模型原话，并明确标注。
+    预算 / 时间不够属于运营自己能解决的情况，不生成。
+    """
+    if not (status == "failed" or reason in ("step_limit_reached", "llm_error", "llm_rounds_limit", "model_no_tool_call")):
+        return None
+    steps = plan.steps if plan else []
+    lines = [f"【转交说明】任务 {run_id}（请求 {req.request_id or '无 request_id'}，第 {attempt_no} 次启动）"]
+    problem = {
+        "step_limit_reached": f"用完 {max_steps} 次动作额度仍未完成",
+        "llm_error": "模型接口调用失败（详见 trace.jsonl 中的 llm_error 事件）",
+        "llm_rounds_limit": "模型交互轮次达到上限",
+        "model_no_tool_call": "模型连续未发出工具调用",
+    }.get(reason, "模型判定无法继续并主动结束")
+    lines.append(f"问题：{problem}。")
+    for s in steps:
+        if s.failures:
+            total = sum(s.failures.values())
+            detail = "、".join(f"{k} {v} 次" for k, v in s.failures.items())
+            need = "必需交付物" if (s.deliverable and s.deliverable.required) else "可选"
+            state = "未完成" if s.status != "done" else "最终成功"
+            lines.append(f"失败记录：工具 {_TOOL_OF.get(s.action, s.action)} 在步骤 {s.id}（{_step_name(s)}，{need}）累计失败 {total} 次（{detail}），{state}。")
+    done = [s for s in steps if s.status == "done"]
+    lines.append(f"已完成：{'、'.join(f'{s.id} {_step_name(s)}' for s in done) if done else '无'}；已花费 {_g(spent)} / 预算 {_g(req.budget)}。")
+    if reason_from_model and unfinished_reason:
+        lines.append(f"模型说明（模型原话，未经核对）：{unfinished_reason}")
+    lines.append("恢复方式：问题排除后，用同一输入加 --resume 续跑；只重做未完成的步骤，不重复计费。")
+    return "\n".join(lines)

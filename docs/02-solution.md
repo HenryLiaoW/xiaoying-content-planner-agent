@@ -56,7 +56,7 @@ projected    spent + remaining（预算约束看它）    min_feasible  满足�
 | `src/loop.py` | 每轮一个动作、动作上限（默认 15，计所有动作含 finish 与被拒）、重复动作提醒；读取并填充提示词模板 | `run_loop` `build_system_prompt` |
 | `src/prompts/system.md` | 系统提示词模板（`string.Template` 的 `$变量` 占位）：角色、工具、费用表、本次任务、硬约束、决策选项 | — |
 | `src/trace.py` | 追加式 JSONL；审阅版（步骤 / 参数 / 返回摘要 / 后续动作 / 决策依据） | `Trace.event` `Trace.review` |
-| `src/report.py` | 终报全部取自库；`adjustments` 与 `user_message` | `build_report` |
+| `src/report.py` | 终报全部取自库；`adjustments`、`user_message`（给运营，白话）与 `handoff_note`（出问题时给负责人的转交说明） | `build_report` |
 | `src/main.py` | CLI、身份分流、`--resume` / `--new-task` / `--inject` / `--mock`、`dump` | `run_request` |
 
 ## 状态值

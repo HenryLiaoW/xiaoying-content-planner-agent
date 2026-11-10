@@ -85,3 +85,22 @@ def test_user_message_has_no_internal_ids(name, tmp_path):
     (out, _), _ = run_scenario(name, tmp_path)
     msg = out.get("user_message") or ""
     assert not re.search(r"\bs\d+\b|generate_script|search_materials|\bmain\b", msg), msg
+
+
+def _sub(tmp_path, name):
+    d = tmp_path / name
+    d.mkdir()
+    return d
+
+
+def test_handoff_note_only_when_something_went_wrong(tmp_path):
+    """转交说明：失败 / 动作用完时生成，含任务号、工具名、失败次数；正常完成和预算不足时没有。"""
+    (out, _), _ = run_scenario("tool_failure_persistent", _sub(tmp_path, "a"))
+    note = out["handoff_note"]
+    assert out["run_id"] in note and "generate_script" in note and "累计失败 2 次" in note and "--resume" in note
+    assert "转交说明" in out["user_message"]
+    (out, _), _ = run_scenario("step_limit", _sub(tmp_path, "b"))
+    assert out["handoff_note"] and "动作额度" in out["handoff_note"]
+    for name in ("normal", "over_budget", "infeasible"):
+        (out, _), _ = run_scenario(name, _sub(tmp_path, name))
+        assert out["handoff_note"] is None and "转交说明" not in out["user_message"]
