@@ -4,6 +4,7 @@
 
 - 结果写法：`✅` 达成 / `⚠️` 部分达成（写明缺什么）/ `☐` 提交时完成。没有证据的不标达成，不把"计划做"记为"已实现"。
 - 来源：**[题]** 第 2 题原文；**[通用]** 通用考核要求；**[示例]** 示例仓库的交付规范；**[自设]** 本项目自己加的标准。
+- 最终候选源码上的两轮真实复验（独立数据库、记录源码版本、不覆盖历史输出）见 `examples/final/README.md`。
 - 路径均相对仓库根目录。"真实"指本机用 qwen-plus 跑出的记录；"离线"指 `examples/mock/`，只验证流程，不代表真实模型的决策效果。
 - 汇总：85 行中 **81 行达成、3 行部分达成、1 行在提交时完成**（G1 最终提交号）。部分达成的 3 行（R14、A5、P2）是同一件事：真实模型在**预算**约束下没有走出"先超限、再改计划"。
 
@@ -48,7 +49,7 @@
 
 | 编号 | 验收点 | 结果与证据 |
 |---|---|---|
-| A1 | 正常完成 | ✅ 真实：`examples/normal`，completed，费用 6 / 20，已保存 |
+| A1 | 正常完成 | ✅ 真实：`examples/normal`，completed，费用 6 / 20，已保存；最终源码复验 `examples/final/rerun/normal` |
 | A2 | 缺预算 | ✅ `examples/mock/missing_budget`：`needs_input`，指明缺 budget；不调模型、不计费（该路径与模型无关） |
 | A3 | 缺截止时间 | ✅ `examples/mock/missing_deadline`：同上 |
 | A4 | 工具失败 | ✅ 真实：`examples/tool_failure_once`、`examples/tool_failure_persistent`；失败不计费、不记为成功 |
@@ -67,7 +68,7 @@
 | P5 | 核对预算计算 | ✅ 终报费用 = 账本求和 = 已完成步骤费用之和（`test_ledger_equals_sum_of_done_steps`）；`dump` 可导出账本 |
 | P6 | 核对步骤依赖与实际状态 | ✅ `src/tools.py::_precheck`（依赖未完成则拒绝）；`tests/test_tools.py` |
 | P7 | 注入一次失败，观察是否调整且保留成功结果 | ✅ 真实：`examples/tool_failure_once`，命令在该目录 `command.txt` |
-| P8 | 高分依据：合理重规划 | ✅ 真实：`examples/deadline_tight` 第 2→3 步（估算晚 1 小时 → 主脚本改简版，理由"节省 1 小时工时"）。仅一次运行 |
+| P8 | 高分依据：合理重规划 | ✅ 真实：`examples/deadline_tight` 第 2→3 步（估算晚 1 小时 → 主脚本改简版，理由"节省 1 小时工时"）；两轮最终复验里同一场景走向一致（`examples/final/deadline_tight`、`examples/final/rerun/deadline_tight`） |
 | P9 | 不是无状态、无失败处理的串行调用 | ✅ 持久化 `src/store.py`、失败处理 `src/tools.py`、重复保护与续跑 `src/main.py`；`docs/03-evaluation.md`"审核要点自查" |
 
 ## 4. 通用考核要求 [通用]

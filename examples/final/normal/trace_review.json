@@ -1,0 +1,17 @@
+[
+  {
+    "step": 1,
+    "attempt_no": 1,
+    "tool": "propose_plan",
+    "args": {
+      "_raw": "{\"reason\": \"为双11推广'一键Vlog模板'，需先搜索相关素材，再生成主推广脚本；balanced偏好选择pro档位确保质量\", \"steps\": [{\"id\": \"s1\", \"action\": \"search_materials\", \"query\": \"一键Vlog模板 双11 推广素材\", \"depends_on\": []}, {\"id\": \"s2\", \"action\": \"generate_script\", \"tier\": \"pro\", \"brief\": \"主推广视频脚本\", \"deliverable\": {\"key\": \"main\", \"required\": true}, \"depends_on\": [\"s1\"]}]"
+    },
+    "result_summary": {
+      "ok": false,
+      "error": "invalid_args",
+      "message": "工具参数不是合法 JSON 对象"
+    },
+    "next_action": "(interrupted)",
+    "decision_basis": null
+  }
+]
