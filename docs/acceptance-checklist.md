@@ -94,7 +94,7 @@
 |---|---|---|
 | E1 | 根目录有 `README.md` | ✅ |
 | E2 | 有 `src/`（源码，含入口） | ✅ 入口 `src/main.py` |
-| E3 | 有 `tests/`（自动化测试） | ✅ `uv run pytest`，91 项 |
+| E3 | 有 `tests/`（自动化测试） | ✅ `uv run pytest`，92 项 |
 | E4 | 有 `examples/`（输入、输出、记录） | ✅ |
 | E5 | 有 `data/`（合成素材与费用表） | ✅ |
 | E6 | `docs/` 含 01–05 五份文档 | ✅ |

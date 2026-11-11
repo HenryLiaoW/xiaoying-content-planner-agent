@@ -1,5 +1,5 @@
 {
-  "run_id": "run_98348d5b1866",
+  "run_id": "run_08329579a7cc",
   "request_id": "req-normal-001",
   "fingerprint": "2ad872774cba03c9dee6fe65f2012e470b71cc9ed5f2f2595ff17d1df2876476",
   "attempt_no": 1,
@@ -8,7 +8,7 @@
   "model": "mock:normal",
   "temperature": null,
   "sdk": null,
-  "source_version": "4fffe31",
+  "source_version": "784452c",
   "status": "completed",
   "finish_reason": "finish_accepted",
   "steps_used": 8,

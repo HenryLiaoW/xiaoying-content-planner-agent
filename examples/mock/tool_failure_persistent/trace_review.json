@@ -107,7 +107,8 @@
       "error": "tool_error",
       "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 1 次尝试失败；未计费。该服务本次运行累计失败 1 次",
       "attempts": 1,
-      "attempts_left": 1
+      "attempts_left": 1,
+      "tool_failures_total": 1
     },
     "next_action": "generate_script(step_id=\"s2\", material_ids=[\"m01\", \"m02\", \"m03\"], brief=\"主视频脚本\")",
     "decision_basis": "生成主脚本"
@@ -130,7 +131,9 @@
       "error": "tool_error",
       "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 2 次尝试失败；未计费。该服务本次运行累计失败 2 次",
       "attempts": 2,
-      "attempts_left": 0
+      "attempts_left": 0,
+      "tool_failures_total": 2,
+      "warning": "你连续两次发出了相同的动作与参数；请根据上一条观察调整，不要原样重复。"
     },
     "next_action": "generate_script(step_id=\"s2\", material_ids=[\"m01\", \"m02\", \"m03\"], brief=\"主视频脚本\")",
     "decision_basis": "重试一次"
@@ -152,7 +155,8 @@
       "ok": false,
       "error": "retry_limit_reached",
       "message": "步骤 s2 已尝试 2 次，达到上限 2；可以换档位 / 改计划，或停止",
-      "attempts": 2
+      "attempts": 2,
+      "warning": "你连续两次发出了相同的动作与参数；请根据上一条观察调整，不要原样重复。"
     },
     "next_action": "finish(status=\"failed\", summary=\"脚本服务持续不可用，任务失败\", unfinished_reason=\"主脚本 s2 连续 2 次失败并达到重试上限；搜索结果已保留\")",
     "decision_basis": "再试"

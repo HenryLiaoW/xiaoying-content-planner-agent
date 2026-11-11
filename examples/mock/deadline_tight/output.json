@@ -1,5 +1,5 @@
 {
-  "run_id": "run_0963eb556c0d",
+  "run_id": "run_be768ceb510b",
   "request_id": "req-deadline-tight-001",
   "fingerprint": "42d01aca5a9cf3a5a726a80dadf3562975c5810a29d8c7242680559bffee3965",
   "attempt_no": 1,
@@ -8,7 +8,7 @@
   "model": "mock:deadline_tight",
   "temperature": null,
   "sdk": null,
-  "source_version": "4fffe31",
+  "source_version": "784452c",
   "status": "completed",
   "finish_reason": "finish_accepted",
   "steps_used": 9,

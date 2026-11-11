@@ -1,5 +1,5 @@
 {
-  "run_id": "run_ea541f01370d",
+  "run_id": "run_978f30082f90",
   "request_id": "req-infeasible-001",
   "fingerprint": "391c574cb3261cd664c5c68d02fa5aa938c7043df77270fd78c306701c9da802",
   "attempt_no": 1,
@@ -8,7 +8,7 @@
   "model": "mock:infeasible",
   "temperature": null,
   "sdk": null,
-  "source_version": "4fffe31",
+  "source_version": "784452c",
   "status": "incomplete",
   "finish_reason": "finish_accepted",
   "steps_used": 3,

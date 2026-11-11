@@ -121,7 +121,8 @@
       "error": "tool_error",
       "message": "generate_script 服务返回错误（注入故障），步骤 s2 第 1 次尝试失败；未计费。该服务本次运行累计失败 1 次",
       "attempts": 1,
-      "attempts_left": 1
+      "attempts_left": 1,
+      "tool_failures_total": 1
     },
     "next_action": "generate_script(step_id=\"s2\", material_ids=[\"m01\", \"m02\", \"m03\"], brief=\"主视频脚本\")",
     "decision_basis": "生成主脚本"
@@ -145,6 +146,7 @@
       "charged": 5.0,
       "spent_cost": 6.0,
       "sim_now": "2026-11-10T11:30:00+08:00",
+      "warning": "你连续两次发出了相同的动作与参数；请根据上一条观察调整，不要原样重复。",
       "script": {
         "tier": "pro",
         "title": "一键 Vlog 模板双11推广｜主视频脚本",

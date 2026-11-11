@@ -42,6 +42,7 @@
       "ok": true,
       "message": "计划已记录为 revision 1；执行前请先 estimate_cost",
       "revision": 1,
+      "warning_steps": "仅剩 3 次动作额度，刚好够估算、保存、结束；如无法完成，请用 finish(status=\"incomplete\") 结束并说明原因。",
       "plan": {
         "revision": 1,
         "steps": [
