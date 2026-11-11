@@ -1,5 +1,5 @@
 {
-  "run_id": "run_be0cff9f25ec",
+  "run_id": "run_ea541f01370d",
   "request_id": "req-infeasible-001",
   "fingerprint": "391c574cb3261cd664c5c68d02fa5aa938c7043df77270fd78c306701c9da802",
   "attempt_no": 1,
@@ -8,6 +8,7 @@
   "model": "mock:infeasible",
   "temperature": null,
   "sdk": null,
+  "source_version": "4fffe31",
   "status": "incomplete",
   "finish_reason": "finish_accepted",
   "steps_used": 3,
@@ -59,7 +60,8 @@
     "within_deadline": true,
     "saved_plan": null,
     "unfinished_reason": "最低可行费用 3 高于预算 2，缺口 1，没有可行方案",
-    "gap": 1.0
+    "gap": 1.0,
+    "time_gap_hours": null
   },
   "adjustments": [],
   "user_message": "未能生成方案：最低交付（一次素材搜索 + 一份简版主脚本）至少需要 3，预算为 2，缺口 1。可将预算提高到 3 后重新提交。",

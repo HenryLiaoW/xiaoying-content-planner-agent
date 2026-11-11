@@ -1,5 +1,5 @@
 {
-  "run_id": "run_77b101d9259c",
+  "run_id": "run_25a2ca4058b9",
   "request_id": "req-step-limit-001",
   "fingerprint": "2ad872774cba03c9dee6fe65f2012e470b71cc9ed5f2f2595ff17d1df2876476",
   "attempt_no": 1,
@@ -8,6 +8,7 @@
   "model": "mock:normal",
   "temperature": null,
   "sdk": null,
+  "source_version": "4fffe31",
   "status": "incomplete",
   "finish_reason": "step_limit_reached",
   "steps_used": 4,
@@ -196,11 +197,12 @@
     "within_deadline": true,
     "saved_plan": null,
     "unfinished_reason": "达到动作上限 4，任务未完成",
-    "gap": null
+    "gap": null,
+    "time_gap_hours": null
   },
   "adjustments": [],
   "user_message": "已用完 4 次动作额度，任务未完成；已完成的 2 个步骤（素材搜索「Vlog 模板 双11」、主视频脚本生成）及其结果已保留，可用 --resume 继续。若多次续跑仍未完成，请把下面的“转交说明”发给负责人。",
-  "handoff_note": "【转交说明】任务 run_77b101d9259c（请求 req-step-limit-001，第 1 次启动）\n问题：用完 4 次动作额度仍未完成。\n已完成：s1 素材搜索「Vlog 模板 双11」、s2 主视频脚本生成；已花费 6 / 预算 20。\n恢复方式：问题排除后，用同一输入加 --resume 续跑；只重做未完成的步骤，不重复计费。",
+  "handoff_note": "【转交说明】任务 run_25a2ca4058b9（请求 req-step-limit-001，第 1 次启动）\n问题：用完 4 次动作额度仍未完成。\n已完成：s1 素材搜索「Vlog 模板 双11」、s2 主视频脚本生成；已花费 6 / 预算 20。\n恢复方式：问题排除后，用同一输入加 --resume 续跑；只重做未完成的步骤，不重复计费。",
   "model_summary": null,
   "llm_usage": {
     "prompt_tokens": 0,

@@ -1,0 +1,20 @@
+# 最终候选源码上的真实模型复验。在仓库根目录执行：sh examples/final/command.txt
+# 约定：使用独立的新数据库（out/final.db，不与任何已有记录共用）；输出写到 examples/final/<场景>/，不覆盖历史记录；
+#       每份 output.json 的 source_version 记录产生它的源码版本。源码有未提交改动、数据库或输出已存在时拒绝运行。
+set -eu
+test -z "$(git status --porcelain -- src data pyproject.toml uv.lock requirements.txt)" || { echo "源码有未提交的改动：请先提交，再运行复验"; exit 1; }
+DB=out/final.db
+test ! -e "$DB" || { echo "$DB 已存在：复验需要全新的数据库，请修改本文件里的 DB= 换一个文件名"; exit 1; }
+for d in normal tool_failure_once tool_failure_persistent resume deadline_tight; do
+  test ! -e "examples/final/$d/output.json" || { echo "examples/final/$d 已有输出：不覆盖"; exit 1; }
+done
+echo "源码版本：$(git rev-parse --short HEAD)"
+run() { echo; echo "== $1"; shift; uv run python -m src.main --db "$DB" --quiet "$@"; }
+
+run "1/5 正常完成"            --input examples/final/normal/input.json                  --out examples/final/normal
+run "2/5 脚本服务失败一次"    --input examples/final/tool_failure_once/input.json       --out examples/final/tool_failure_once       --inject generate_script:first
+run "3/5 脚本服务持续失败"    --input examples/final/tool_failure_persistent/input.json --out examples/final/tool_failure_persistent --inject generate_script:always
+mkdir -p examples/final/resume && cp examples/final/tool_failure_persistent/input.json examples/final/resume/input.json
+run "4/5 服务恢复后续跑（接第 3 条，同一请求）" --input examples/final/resume/input.json        --out examples/final/resume --resume
+run "5/5 截止时间只剩 1.5 小时" --input examples/final/deadline_tight/input.json          --out examples/final/deadline_tight
+echo; echo "完成。输出在 examples/final/；数据库 $DB 不入库。"

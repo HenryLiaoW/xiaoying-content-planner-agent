@@ -1,5 +1,5 @@
 {
-  "run_id": "run_319cc8eda28a",
+  "run_id": "run_0963eb556c0d",
   "request_id": "req-deadline-tight-001",
   "fingerprint": "42d01aca5a9cf3a5a726a80dadf3562975c5810a29d8c7242680559bffee3965",
   "attempt_no": 1,
@@ -8,6 +8,7 @@
   "model": "mock:deadline_tight",
   "temperature": null,
   "sdk": null,
+  "source_version": "4fffe31",
   "status": "completed",
   "finish_reason": "finish_accepted",
   "steps_used": 9,
@@ -164,7 +165,8 @@
       "saved_at": "2026-11-10T10:30:00+08:00"
     },
     "unfinished_reason": null,
-    "gap": null
+    "gap": null,
+    "time_gap_hours": null
   },
   "adjustments": [
     {
@@ -188,7 +190,7 @@
       "model_reason": "pro 需 2.5h 超过截止，改 lite（1.5h）"
     }
   ],
-  "user_message": "方案已保存，费用 3 / 预算 20，预计 11-10 10:30 完成。 注意：原方案预计 11-10 11:30 完成，晚于截止时间，已调整为 主视频脚本由完整版改为简版——这是时间不足下的调整结果。",
+  "user_message": "方案已保存，费用 3 / 预算 20，预计 11-10 10:30 完成。 注意：原方案预计 11-10 11:30 完成，晚于截止时间 11-10 10:30，已调整为 主视频脚本由完整版改为简版——这是时间不足下的调整结果。",
   "handoff_note": null,
   "model_summary": "方案已保存",
   "llm_usage": {

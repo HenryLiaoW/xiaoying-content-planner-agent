@@ -69,13 +69,15 @@ projected    spent + remaining（预算约束看它）    min_feasible  满足�
 
 身份 = `request_id`（有则用）否则 `fp:<指纹>`。指纹 = 规范化后的 topic / budget / deadline / quality_preference 的 SHA-256；`now` 与 `request_id` 不参与。
 同身份再次提交：completed → 直接返回已有结果，零新事件、不重复计费；failed/incomplete → 只返回状态，显式 `--resume` 才续跑（新重试窗口，已完成步骤与费用保留）。同 `request_id` 不同参数 → `request_conflict`。
+真实模型与离线 Mock 默认使用不同的数据库（`out/agent.db` / `out/mock.db`）；同一库内同一身份若此前是另一种模式提交的，同样返回 `request_conflict`（`conflict=mode`）且不执行，避免把离线结果当成真实结果。运行配置（密钥、注入参数）在写库之前校验，配置出错不会留下任务记录。
+终报与事件日志的 `source_version` 记录产生该记录的源码版本（git 短提交号；`src/`、`data/` 或依赖文件有未提交改动时带 `+dirty`）。
 
 ## 取舍
 
 - **手写循环而非 LangGraph**：工具少、串行、单模型；一次"调用-校验-反馈-终止"循环比引入框架省时且每行可解释。框架不加分，可解释才有价值。
 - **SQLite 而非 JSON 文件**：幂等、续跑、账实核对都需要事务与唯一约束。
 - **finish 是会失败的工具**：防止"未保存就宣称完成"；终报由程序组装，模型只提供意图与一句总结。
-- **脚本用确定性模板**：考点是约束下的规划与重规划，不是文案质量；模板让 17 项测试完全确定。接口预留 `SCRIPT_BACKEND=llm`，未实现。
+- **脚本用确定性模板**：考点是约束下的规划与重规划，不是文案质量；模板让测试结果完全确定。接口预留 `SCRIPT_BACKEND=llm`，未实现。
 - **失败不计费**：简化账目核对；真实业务中失败也可能产生费用，属 v2。
 
 ## 局限

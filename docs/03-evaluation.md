@@ -1,5 +1,28 @@
 # 测试与评估
 
+## 评估摘要（先看这里）
+
+结论分三档：**已验证**（有真实模型记录或确定性测试）、**部分验证**（只有离线，或真实只有一次且不能排除偶然）、**未验证**。
+
+| 观察项 | 证据 | 结论 |
+|---|---|---|
+| 目录、文档、可复现 | README；干净目录用 uv 与 pip 各装一遍；公开仓库匿名克隆后测试全部通过（`examples/test-results.txt`） | 已验证 |
+| 决策循环由模型驱动 | 真实记录里的重试、降档、改计划、主动停止都由模型发起，代码只做校验、记账与拒绝（`examples/*/trace_review.json`） | 已验证 |
+| 正常完成 | 真实：`examples/normal` | 已验证 |
+| 缺预算 / 缺截止时间 | 入口层直接返回、不调模型（与模型无关）：`examples/mock/missing_*`、`tests/test_schema.py` | 已验证 |
+| 工具失败 | 真实：失败一次后重试（`tool_failure_once`）；持续失败后主动停止并保留已完成部分（`tool_failure_persistent`） | 已验证（各一次） |
+| 预算超限 | 离线与测试覆盖"估算超限 → 改计划 → 再估算 → 保存"和"无可行方案 → 返回缺口"。真实模型在预算 10 / 8 下拟计划时就控制在预算内，**没有出现"超限后再改"**：价格表写在提示词里，模型提前算好了 | 部分验证 |
+| 截止时间超限后的重规划 | 真实：`examples/deadline_tight`（估算晚 1 小时 → 改简版 → 再估算 → 保存） | 已验证（一次） |
+| 重复执行 | 入口层判断、不调模型：`examples/mock/duplicate`、`tests/test_cli.py` | 已验证 |
+| 失败后续跑（加分） | 真实：`examples/resume`（只补做失败的主脚本，搜索不重做、不重复计费） | 已验证（一次） |
+| 最终候选源码的真实复验 | 尚未进行；命令见 `examples/final/command.txt` | 未验证 |
+| 持续故障下及时停止 | 依赖"累计失败次数"提示与动作上限；**缺少跨档位的提前停止策略**（换档位会重置该步骤的重试次数）。改进前模型用满 15 次动作，改进后复测一次，在累计 4 次失败时主动停止 | 部分验证 |
+| 稳定性 | 每个真实场景只运行一次；**缺少重复运行统计**（状态、费用、步数的分布） | 未验证 |
+| 脚本内容质量 | 脚本由确定性模板生成，不是模型写的；素材匹配是关键词打分 | 未验证 |
+| 运营可用性 | 命令行原型，输入输出是 JSON；没有界面，降级前不会先询问运营 | 未验证 |
+
+不能仅因目录和测试齐全就判定本项目达标；上表"部分验证 / 未验证"是如实的边界，对应的改进方向见 [05-retrospective.md](05-retrospective.md)。逐条对照题目与交付规范的自查见 [acceptance-checklist.md](acceptance-checklist.md)。
+
 两类证据，分开存放、分开标注：
 
 - **真实模型**（百炼 qwen-plus，temperature 0）：`examples/normal/` `tool_failure_once/` `over_budget/` `over_budget_b/`（11-09）与 `examples/resume/attempt1` `attempt2`、`examples/tool_failure_persistent/`、`examples/deadline_tight/`（11-10），均由 Henry 在本机运行，trace 为真实决策过程。
@@ -9,7 +32,7 @@
 
 ## 自动化测试
 
-共 82 项，全部通过（`uv run pytest`）。命令、环境与实际输出见 [examples/test-results.txt](../examples/test-results.txt)。
+共 91 项，全部通过。命令、环境与逐项结果见 [examples/test-results.txt](../examples/test-results.txt)。
 
 | 文件 | 覆盖 |
 |---|---|
@@ -17,8 +40,11 @@
 | `test_plan.py` | 参考实例 12 → 8；最低可行费用 3；已花费不被重规划抹掉；6 类结构非法；修订不能删 main / 改 done；改档位重置失败步骤；模拟时钟与截止；保存阻塞项 |
 | `test_tools.py` | 执行前校验错误码顺序；拒绝不计费；改计划后必须重估；依赖未完成；done 步骤复用不重复计费；素材引用限制；注入 first/always 与重试上限；档位取自计划；调整说明的触发与变更 |
 | `test_finish.py` | 无计划 / 未保存 / 估算过期 → `finish_rejected` / `not_saveable`；incomplete 需原因；只做可选脚本不能保存 |
-| `test_loop_mock.py` | 11 个场景各一用例：状态、费用、保存、缺口、attempts、调整触发、五要素齐全、日志只追加；失败步骤不出现在产物中；账本 = done 步骤费用之和 |
-| `test_cli.py` | 进程级两次启动：第二次 `served_from=existing`、零新事件、库中 1 任务 1 保存；同 id 不同预算 → `request_conflict`；不同 id 各自执行；无 id 时 `--new-task` 才新建任务；失败任务需显式 `--resume`；退出码 |
+| `test_loop_mock.py` | 11 个场景各一用例：状态、费用、保存、缺口、attempts、调整触发、五要素齐全、事件序号连续；给运营的话里不出现内部编号；转交说明只在出问题时生成；失败步骤不出现在产物中；账本 = done 步骤费用之和 |
+| `test_cli.py` | 进程级两次启动：第二次 `served_from=existing`、零新事件、库中 1 任务 1 保存；同 id 不同预算 → `request_conflict`；不同 id 各自执行；无 id 时 `--new-task` 才新建任务；失败任务需显式 `--resume`；退出码；入口层拒绝时不建库；缺密钥返回 `config_error` 且不留任务记录；同一库内真实与离线记录不混用；默认数据库按模式区分；终报记录源码版本 |
+| `test_report.py` | 超期相关的话只依据算得出来的事实：最省时的做法也来不及才说"来不及"并给出差多少；当前计划超时但有更省时的做法时不下这个结论；因工具失败结束的任务报失败而不是报超期 |
+| `test_trace.py` | 事件日志只追加：再次启动写同一个文件时旧内容一字不动，序号接着往后排 |
+| `test_prompt.py` | 提示词模板是独立文件；占位符全部填充；关键数字来自费用表与请求 |
 
 ## 场景与验收点对照
 

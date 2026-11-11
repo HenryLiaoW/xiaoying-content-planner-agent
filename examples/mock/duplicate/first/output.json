@@ -1,5 +1,5 @@
 {
-  "run_id": "run_95d462e25db8",
+  "run_id": "run_0e0a1ffeaa53",
   "request_id": "req-duplicate-001",
   "fingerprint": "2ad872774cba03c9dee6fe65f2012e470b71cc9ed5f2f2595ff17d1df2876476",
   "attempt_no": 1,
@@ -8,6 +8,7 @@
   "model": "mock:normal",
   "temperature": null,
   "sdk": null,
+  "source_version": "4fffe31",
   "status": "completed",
   "finish_reason": "finish_accepted",
   "steps_used": 8,
@@ -216,7 +217,8 @@
       "saved_at": "2026-11-10T12:30:00+08:00"
     },
     "unfinished_reason": null,
-    "gap": null
+    "gap": null,
+    "time_gap_hours": null
   },
   "adjustments": [],
   "user_message": "方案已保存，费用 8 / 预算 20，预计 11-10 12:30 完成。",
