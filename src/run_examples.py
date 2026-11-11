@@ -1,5 +1,5 @@
-"""批量生成 examples/：`python -m src.run_examples --mock`（离线，写到 examples/mock/<场景>/）
-或 `python -m src.run_examples`（真实模型，写到 examples/<场景>/，需要 .env）。
+"""批量运行场景：`python -m src.run_examples --mock`（离线，写到 examples/mock/<场景>/）
+或 `python -m src.run_examples`（真实模型，需要 .env；写到 out/real_examples/<场景>/，不覆盖 examples/ 里的存档）。
 
 每个场景目录：input.json、output.json、trace.jsonl、trace_review.json、command.txt。
 """
@@ -24,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--keep-db", action="store_true", help="不清空场景数据库")
     args = p.parse_args(argv)
 
-    base = ROOT / "examples" / ("mock" if args.mock else "")
+    base = ROOT / "examples" / "mock" if args.mock else ROOT / "out" / "real_examples"
     names = args.only or list(SCENARIOS)
     summary = []
     for name in names:

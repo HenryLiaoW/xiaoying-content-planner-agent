@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -24,6 +25,28 @@ from .tools import Injector, Tools
 from .trace import Trace
 
 FIELD_LABELS = {"topic": "主题", "budget": "预算", "deadline": "截止时间"}
+MODE_NAMES = {"real": "真实模型", "offline_mock": "离线 Mock"}
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def default_db_path(mock: bool) -> str:
+    """真实模型与离线 Mock 默认使用不同的数据库，避免两种模式的记录互相当成“重复提交”。"""
+    return "out/mock.db" if mock else "out/agent.db"
+
+
+def source_version() -> str:
+    """产生本次记录的源码版本：git 短提交号；src/、data/ 或依赖文件有未提交改动时加 +dirty；非 git 环境为 unknown。"""
+    try:
+        sha = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=5)
+        if sha.returncode != 0 or not sha.stdout.strip():
+            return "unknown"
+        dirty = subprocess.run(
+            ["git", "-C", str(ROOT), "status", "--porcelain", "--", "src", "data", "pyproject.toml", "uv.lock", "requirements.txt"],
+            capture_output=True, text=True, timeout=5,
+        )
+        return sha.stdout.strip() + ("+dirty" if dirty.stdout.strip() else "")
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
 
 
 def _emit(obj: dict[str, Any], out_dir: Optional[Path] = None, name: str = "output.json") -> None:
@@ -50,7 +73,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--input", help="请求 JSON 文件路径")
-    p.add_argument("--db", default="out/agent.db", help="SQLite 路径（默认 out/agent.db）")
+    p.add_argument("--db", default=None, help="SQLite 路径（默认：真实模型 out/agent.db，离线 Mock out/mock.db）")
     p.add_argument("--out", help="输出目录（默认 out/<run_id>）")
     p.add_argument("--now", help="覆盖输入中的 now（ISO 8601）")
     p.add_argument("--mock", action="store_true", help="离线 Mock：替换模型客户端，其余真跑；仅验证流程")
@@ -105,7 +128,7 @@ def run_request(args: argparse.Namespace) -> int:
     fp = fingerprint(req)
     identity = identity_of(req, fp, new_task=args.new_task)
     mode = "offline_mock" if args.mock else "real"
-    store = Store(args.db)
+    store = Store(args.db or default_db_path(args.mock))
 
     # ---- 2. 身份分流
     existing = store.get_run_by_identity(identity)
@@ -116,6 +139,14 @@ def run_request(args: argparse.Namespace) -> int:
                 "status": "request_conflict", "run_id": existing["run_id"], "request_id": req.request_id,
                 "message": "同一 request_id 此前提交过不同的参数；未执行、未覆盖。如是新任务请换 request_id。",
                 "user_message": "这个请求编号之前用过，但主题/预算/截止时间不一样，为避免覆盖没有执行。请换一个请求编号。",
+            })
+            return 0
+        if existing["mode"] != mode:
+            was, now_ = MODE_NAMES.get(existing["mode"], existing["mode"]), MODE_NAMES.get(mode, mode)
+            _emit({
+                "status": "request_conflict", "conflict": "mode", "run_id": existing["run_id"], "request_id": req.request_id,
+                "message": f"该请求此前以“{was}”模式提交过，本次是“{now_}”；两种模式的记录不混用，未执行、未覆盖。请为两种模式使用不同的 --db，或换 request_id。",
+                "user_message": f"这个请求之前是在“{was}”模式下提交的，本次是“{now_}”模式。为避免把演示结果和真实结果混在一起，本次没有执行。",
             })
             return 0
         prior = json.loads(existing["result_json"]) if existing["result_json"] else None
@@ -129,28 +160,16 @@ def run_request(args: argparse.Namespace) -> int:
             out["hint"] = f"任务 {existing['run_id']} 状态为 {existing['status']}（attempt {existing['attempt_no']}）；加 --resume 续跑，已完成步骤与费用会保留。"
             _emit(out, Path(args.out) if args.out else None)
             return 0
-        run_id = existing["run_id"]
-        served_from = "resumed"
-        store.update_run(run_id, status="running", attempt_no=existing["attempt_no"] + 1)
-    else:
-        if args.resume:
-            _emit({"status": "not_found", "message": "没有可续跑的任务（该输入此前未提交过）", "user_message": "没有找到可以继续的任务，请去掉 --resume 直接提交。"})
-            return 0
-        run_id = store.create_run(identity, req.request_id, fp, raw, normalized(req), req.now, mode)
+    elif args.resume:
+        _emit({"status": "not_found", "message": "没有可续跑的任务（该输入此前未提交过）", "user_message": "没有找到可以继续的任务，请去掉 --resume 直接提交。"})
+        return 0
 
-    run = store.get_run(run_id)
-    attempt_no = run["attempt_no"]
-    out_dir = Path(args.out) if args.out else Path("out") / run_id
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    # ---- 3. 组装运行时
+    # ---- 3. 组装运行时：先校验配置，再写库（配置出错不留下半截任务）
     try:
         injector = Injector(args.inject)
     except ValueError as e:
         _emit({"status": "invalid_input", "error": str(e)})
         return 2
-    table = CostTable()
-    tools = Tools(store, run_id, req, table=table, injector=injector, script_backend=os.environ.get("SCRIPT_BACKEND", "template"))
     if args.mock:
         from .mock_scripts import get_script
 
@@ -165,6 +184,22 @@ def run_request(args: argparse.Namespace) -> int:
         import openai
 
         model_info = {"model": llm.model, "temperature": llm.temperature, "sdk": f"openai {openai.__version__}", "base_url": llm.base_url}
+    version = source_version()
+    model_info["source_version"] = version
+
+    if existing is not None:
+        run_id = existing["run_id"]
+        served_from = "resumed"
+        store.update_run(run_id, status="running", attempt_no=existing["attempt_no"] + 1)
+    else:
+        run_id = store.create_run(identity, req.request_id, fp, raw, normalized(req), req.now, mode)
+
+    run = store.get_run(run_id)
+    attempt_no = run["attempt_no"]
+    out_dir = Path(args.out) if args.out else Path("out") / run_id
+    out_dir.mkdir(parents=True, exist_ok=True)
+    table = CostTable()
+    tools = Tools(store, run_id, req, table=table, injector=injector, script_backend=os.environ.get("SCRIPT_BACKEND", "template"))
 
     extra_ctx = None
     if served_from == "resumed":
@@ -191,7 +226,7 @@ def run_request(args: argparse.Namespace) -> int:
             )
 
     trace = Trace(out_dir / "trace.jsonl", run_id, attempt_no)
-    trace.event("run_start", mode=mode, served_from=served_from, request=normalized(req), inject=args.inject, max_steps=args.max_steps, model=model_info.get("model"))
+    trace.event("run_start", mode=mode, served_from=served_from, request=normalized(req), inject=args.inject, max_steps=args.max_steps, model=model_info.get("model"), source_version=version)
 
     # ---- 4. 决策循环
     result = run_loop(llm, tools, trace, req, max_steps=args.max_steps, extra_user_context=extra_ctx)

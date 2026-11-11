@@ -1,14 +1,18 @@
 """进程级：重复执行、续跑提示、退出码。"""
 import json
+import os
+import re
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+NO_KEY = {**os.environ, "LLM_API_KEY": ""}  # 显式置空：不读本机 .env 里的真实密钥，测试不会发起任何模型调用
 
 
-def cli(args, cwd=ROOT):
-    p = subprocess.run([sys.executable, "-m", "src.main", *args], cwd=cwd, capture_output=True, text=True)
+def cli(args, cwd=ROOT, env=None):
+    p = subprocess.run([sys.executable, "-m", "src.main", *args], cwd=cwd, capture_output=True, text=True, env=env)
     try:
         return json.loads(p.stdout), p.returncode
     except json.JSONDecodeError:
@@ -67,7 +71,7 @@ def test_exit_codes(tmp_path):
     assert code == 2 and out["status"] == "invalid_input"
     out, code = cli(["--input", write(tmp_path, "miss.json", {k: v for k, v in BASE.items() if k != "budget"}), "--db", str(tmp_path / "a.db")])
     assert code == 0 and out["status"] == "needs_input" and out["missing_fields"] == ["budget"]
-    assert not (tmp_path / "a.db").exists() or True  # 入口层不建任务：由 test_loop_mock 覆盖 trace 不存在
+    assert not (tmp_path / "a.db").exists()  # 入口层直接返回：不建库、不建任务
 
 
 def test_resume_redoes_only_failed_step_and_keeps_ledger(tmp_path):
@@ -97,3 +101,45 @@ def test_new_task_flag_creates_a_separate_run(tmp_path):
     assert fresh["served_from"] == "executed" and fresh["run_id"] != first["run_id"] and fresh["status"] == "completed"
     rejected, code = cli(["--input", write(tmp_path, "b.json", BASE), "--db", db, "--out", str(tmp_path / "o4"), "--mock", "--new-task"])
     assert rejected["status"] == "invalid_input" and code == 2
+
+
+def test_config_error_leaves_no_run_behind(tmp_path):
+    """真实模式缺密钥：返回 config_error（退出码 2），且库里不留半截任务；随后同一输入、同一个库用离线模式能正常执行。"""
+    inp = write(tmp_path, "in.json", BASE)
+    db = tmp_path / "a.db"
+    out, code = cli(["--input", inp, "--db", str(db), "--out", str(tmp_path / "o1")], env=NO_KEY)
+    assert code == 2 and out["status"] == "config_error"
+    assert not (tmp_path / "o1").exists()
+    assert sqlite3.connect(db).execute("SELECT COUNT(*) FROM runs").fetchone()[0] == 0
+    again, code = cli(["--input", inp, "--db", str(db), "--out", str(tmp_path / "o2"), "--mock"])
+    assert code == 0 and again["status"] == "completed" and again["served_from"] == "executed"
+
+
+def test_real_and_mock_records_are_not_mixed(tmp_path):
+    """同一个库里，离线 Mock 跑过的请求再用真实模式提交：既不返回 Mock 的结果，也不执行。"""
+    inp = write(tmp_path, "in.json", BASE)
+    db = str(tmp_path / "a.db")
+    first, _ = cli(["--input", inp, "--db", db, "--out", str(tmp_path / "o1"), "--mock"])
+    assert first["status"] == "completed" and first["mode"] == "offline_mock"
+    second, code = cli(["--input", inp, "--db", db, "--out", str(tmp_path / "o2")], env=NO_KEY)
+    assert code == 0 and second["status"] == "request_conflict" and second["conflict"] == "mode"
+    assert "result" not in second and not (tmp_path / "o2").exists()
+
+
+def test_default_database_differs_by_mode(tmp_path):
+    """不传 --db 时，离线 Mock 写 out/mock.db，不碰真实模型默认用的 out/agent.db。"""
+    from src.main import default_db_path
+
+    assert default_db_path(mock=True) == "out/mock.db" and default_db_path(mock=False) == "out/agent.db"
+    inp = write(tmp_path, "in.json", BASE)
+    out, code = cli(["--input", inp, "--mock", "--out", str(tmp_path / "o1")], cwd=tmp_path, env={**os.environ, "PYTHONPATH": str(ROOT)})
+    assert code == 0 and out["status"] == "completed"
+    assert (tmp_path / "out" / "mock.db").exists() and not (tmp_path / "out" / "agent.db").exists()
+
+
+def test_output_records_source_version(tmp_path):
+    """终报与事件日志都记下产生它的源码版本（git 短提交号，可带 +dirty；非 git 环境为 unknown）。"""
+    out, _ = cli(["--input", write(tmp_path, "in.json", BASE), "--db", str(tmp_path / "a.db"), "--out", str(tmp_path / "o1"), "--mock"])
+    assert re.fullmatch(r"[0-9a-f]{7,40}(\+dirty)?|unknown", out["source_version"])
+    start = json.loads((tmp_path / "o1" / "trace.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert start["type"] == "run_start" and start["source_version"] == out["source_version"]

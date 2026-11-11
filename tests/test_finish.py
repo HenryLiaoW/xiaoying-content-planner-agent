@@ -30,8 +30,8 @@ def test_incomplete_requires_reason(tools):
     assert ok["accepted"] and ok["status"] == "incomplete"
 
 
-def test_save_rejected_when_over_budget_after_execution(store, req):
-    """构造：预算 10，计划 8 可行；执行后人为改预算不可能——改为验证主脚本缺失时不能保存。"""
+def test_save_rejected_when_only_optional_script_done(store, req):
+    """只完成了可选的预热脚本、主脚本还没有产物时，不能保存。"""
     from conftest import make_tools
 
     t = make_tools(store, req)

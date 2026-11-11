@@ -38,8 +38,13 @@ def test_type_error_wins_over_missing():
 
 
 def test_now_defaults_to_current_time_when_absent():
+    from datetime import datetime, timedelta, timezone
+
+    before = datetime.now(timezone.utc)
     req = check_input(_with(now=None, deadline="2099-01-01T00:00:00+08:00"))
-    assert req.now is not None and req.deadline > req.now
+    after = datetime.now(timezone.utc)
+    assert before - timedelta(seconds=1) <= req.now <= after + timedelta(seconds=1)  # 取的是系统当前时间
+    assert req.now.utcoffset() is not None  # 带时区
 
 
 def test_fingerprint_ignores_representation_only():

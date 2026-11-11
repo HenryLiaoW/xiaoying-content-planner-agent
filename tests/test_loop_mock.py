@@ -56,10 +56,11 @@ def test_scenario(name, tmp_path):
         assert set(row) >= {"step", "tool", "args", "result_summary", "next_action", "decision_basis"}
         assert row["decision_basis"]
     assert review[-1]["next_action"] in ("(end)", "(step limit reached)")
-    # 事件日志只追加
+    # 事件日志：序号从 1 连续递增、无重复，首尾分别是 run_start / run_end（“只追加”见 tests/test_trace.py）
     lines = (out_dir / "trace.jsonl").read_text(encoding="utf-8").splitlines()
-    seqs = [json.loads(l)["seq"] for l in lines]
-    assert seqs == sorted(seqs) and lines[0].count('"run_start"') == 1 and '"run_end"' in lines[-1]
+    events = [json.loads(l) for l in lines]
+    assert [e["seq"] for e in events] == list(range(1, len(events) + 1))
+    assert events[0]["type"] == "run_start" and events[-1]["type"] == "run_end"
     assert out["note"].startswith("离线 Mock")
 
 

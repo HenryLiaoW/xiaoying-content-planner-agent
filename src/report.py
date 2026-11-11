@@ -4,7 +4,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
 from .loop import LoopResult
@@ -77,7 +77,8 @@ def build_report(
 
     adjustments = list(tools.adjustments)  # 含历次启动（runs.adjustments_json），保存时快照进 saved_plans
 
-    user_message = _user_message(status, result.reason, req, plan, est, saved, spent, sim_now, gap, adjustments, unfinished_reason, max_steps)
+    timing = _timing(tools._estimate_now() if (plan and status != "completed") else None, req.deadline)
+    user_message = _user_message(status, result.reason, req, plan, est, saved, spent, sim_now, gap, adjustments, unfinished_reason, max_steps, timing)
     handoff_note = _handoff_note(status, result.reason, run_id, req, run["attempt_no"], plan, spent, unfinished_reason, bool(result.finish_args), max_steps)
 
     report: dict[str, Any] = {
@@ -107,6 +108,7 @@ def build_report(
             "saved_plan": {"revision": saved["revision"], "saved_at": saved["saved_at"]} if saved else None,
             "unfinished_reason": unfinished_reason,
             "gap": gap,
+            "time_gap_hours": timing["gap_hours"] if timing else None,
         },
         "adjustments": adjustments,
         "user_message": user_message,
@@ -133,6 +135,7 @@ def _user_message(
     adjustments: list[dict[str, Any]],
     unfinished_reason: Optional[str],
     max_steps: int,
+    timing: Optional[dict[str, Any]] = None,
 ) -> str:
     if status == "completed":
         msg = f"方案已保存，费用 {_g(spent)} / 预算 {_g(req.budget)}，预计 {_fmt_dt(sim_now)} 完成。"
@@ -145,7 +148,7 @@ def _user_message(
             if a["trigger"] == "over_budget":
                 msg += f" 注意：原方案预计 {_g(before)}，超出预算 {_g(before - req.budget)}，已调整为 {detail}，预计 {_g(after)}——这是{why}下的调整结果。"
             else:
-                msg += f" 注意：原方案预计 {_fmt_dt(a['before']['projected_finish'])} 完成，晚于截止时间，已调整为 {detail}——这是{why}下的调整结果。"
+                msg += f" 注意：原方案预计 {_fmt_dt(a['before']['projected_finish'])} 完成，晚于截止时间 {_fmt_dt(req.deadline)}，已调整为 {detail}——这是{why}下的调整结果。"
         other = [a for a in adjustments if a["trigger"] == "tool_failure"]
         if other:
             msg += f" 执行中有步骤失败，已改计划继续：{'、'.join(other[0].get('changes_plain') or other[0]['changes'])}。"
@@ -162,10 +165,12 @@ def _user_message(
             f"未能生成方案：最低交付（一次素材搜索 + 一份简版主脚本）至少需要 {_g(est.min_feasible_cost)}，"
             f"预算为 {_g(req.budget)}，缺口 {_g(gap)}。可将预算提高到 {_g(est.min_feasible_cost)} 后重新提交。"
         )
-    if est is not None and not est.within_deadline and status != "completed" and reason == "finish_accepted" and est.min_feasible_hours > 0:
+    if timing and timing["gap_hours"] is not None and status == "incomplete" and reason == "finish_accepted":
+        # 只有“最省时的做法也赶不上”才告诉运营来不及；当前计划超时但还有更省时的做法时，不下这个结论
         return (
-            f"未能生成方案：最低交付至少需要 {_g(est.min_feasible_hours)} 小时，"
-            f"截止时间 {_fmt_dt(req.deadline)} 来不及。可放宽截止时间后重新提交。{kept}。"
+            f"未能生成方案：按最省时的做法（必要的素材搜索 + 简版主脚本）还需要 {_g(timing['min_hours'])} 小时，"
+            f"最早 {_fmt_dt(timing['min_finish'])} 完成，晚于截止时间 {_fmt_dt(req.deadline)}（差 {_g(timing['gap_hours'])} 小时）。"
+            f"可把截止时间放宽到 {_fmt_dt(timing['min_finish'])} 之后重新提交。{kept}。"
         )
     if reason == "step_limit_reached":
         return f"已用完 {max_steps} 次动作额度，任务未完成；{kept}，可用 --resume 继续。{_HANDOFF_HINT}"
@@ -178,7 +183,28 @@ def _user_message(
             f"未能完成方案：{what}。{kept}，已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
             f"你可以稍后用 --resume 重试（只会重做失败的步骤，不重复计费）；若仍失败，请把下面的“转交说明”发给相关服务的负责人。"
         )
-    return f"任务未完成。{kept}，可用 --resume 继续。已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
+    late = ""
+    if timing and timing["plan_over"] and timing["gap_hours"] is None:
+        late = f"按当前计划预计 {_fmt_dt(timing['plan_finish'])} 完成，晚于截止时间 {_fmt_dt(req.deadline)}"
+        late += f"；换成更省时的做法最早可在 {_fmt_dt(timing['min_finish'])} 完成。" if timing["min_finish"] else "。"
+    return f"任务未完成。{late}{kept}，可用 --resume 继续。已花费 {_g(spent)} / 预算 {_g(req.budget)}。"
+
+
+def _timing(current: Any, deadline: datetime) -> Optional[dict[str, Any]]:
+    """按当前状态判断时间：当前计划是否超时（plan_over），以及最省时的做法是否也来不及（gap_hours 非空才是真的来不及）。"""
+    if current is None:
+        return None
+    min_finish = current.sim_now + timedelta(hours=current.min_feasible_hours) if current.min_feasible_hours > 0 else None
+    gap_hours = None
+    if min_finish is not None and min_finish > deadline:
+        gap_hours = round((min_finish - deadline).total_seconds() / 3600, 4)
+    return {
+        "plan_over": not current.within_deadline,
+        "plan_finish": current.projected_finish,
+        "min_hours": current.min_feasible_hours,
+        "min_finish": min_finish,
+        "gap_hours": gap_hours,
+    }
 
 
 def _step_name(s: Any) -> str:

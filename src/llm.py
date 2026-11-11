@@ -42,6 +42,9 @@ class LLMClient(Protocol):
 
 # ------------------------------------------------------- 真实客户端 ----
 
+PLACEHOLDER_KEYS = {"your-api-key-here", "sk-your-key-here"}  # .env.example 里的占位值，不当作密钥
+
+
 class OpenAICompatClient:
     """百炼 / 任何 OpenAI 兼容端点。temperature 0，不开 thinking，SDK timeout 60s、max_retries 1。"""
 
@@ -60,8 +63,8 @@ class OpenAICompatClient:
 
         self.base_url = base_url or os.environ.get("LLM_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
         api_key = api_key or os.environ.get("LLM_API_KEY")
-        if not api_key:
-            raise RuntimeError("缺少 LLM_API_KEY（请在 .env 中设置），或改用 --mock 离线运行")
+        if not api_key or api_key in PLACEHOLDER_KEYS:
+            raise RuntimeError("缺少 LLM_API_KEY（请在 .env 中填入真实密钥），或改用 --mock 离线运行")
         self.model = model or os.environ.get("LLM_MODEL", "qwen-plus")
         self.temperature = temperature
         self.client = OpenAI(base_url=self.base_url, api_key=api_key, timeout=timeout, max_retries=max_retries)

@@ -72,7 +72,8 @@ def test_tier_comes_from_plan_not_args(tools):
 
 def test_invalid_args_is_observation(tools):
     obs = tools.execute("propose_plan", {"steps": "not-a-list"})
-    assert obs["error"] == "invalid_args" and "reason" in obs["message"] or obs["error"] == "invalid_args"
+    assert obs["ok"] is False and obs["error"] == "invalid_args"
+    assert "steps" in obs["message"] and "reason" in obs["message"]  # 指出是哪些参数有问题
     assert tools.execute("nonexistent", {})["error"] == "unknown_action"
 
 
