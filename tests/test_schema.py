@@ -61,3 +61,13 @@ def test_fingerprint_changes_on_semantic_difference():
 def test_normalized_shape():
     n = normalized(check_input(BASE_INPUT))
     assert n == {"topic": "一键 Vlog 模板双11推广", "budget": 10, "deadline": "2026-11-12T10:00:00+00:00", "quality_preference": "high"}
+
+
+def test_check_input_does_not_modify_caller_input():
+    """校验与规范化不改动调用方传入的原始输入。"""
+    import copy
+
+    raw = _with(topic="  一键 Vlog 模板双11推广  ", budget=10)
+    before = copy.deepcopy(raw)
+    check_input(raw)
+    assert raw == before

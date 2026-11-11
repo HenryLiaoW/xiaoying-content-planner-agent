@@ -83,3 +83,17 @@ def test_resume_redoes_only_failed_step_and_keeps_ledger(tmp_path):
     dump, _ = cli(["dump", "--db", db, "--run", first["run_id"]])
     assert [(l["step_id"], l["amount"]) for l in dump["ledger"]] == [("s1", 1.0), ("s2", 5.0)]  # s1 未重复计费
     assert len(dump["runs"]) == 1 and len(dump["saved_plans"]) == 1
+
+
+def test_new_task_flag_creates_a_separate_run(tmp_path):
+    """无 request_id 时：同样的输入默认算重复提交；加 --new-task 才新建任务。带 request_id 时该开关被拒。"""
+    no_id = {k: v for k, v in BASE.items() if k != "request_id"}
+    inp = write(tmp_path, "in.json", no_id)
+    db = str(tmp_path / "a.db")
+    first, _ = cli(["--input", inp, "--db", db, "--out", str(tmp_path / "o1"), "--mock"])
+    again, _ = cli(["--input", inp, "--db", db, "--out", str(tmp_path / "o2"), "--mock"])
+    fresh, _ = cli(["--input", inp, "--db", db, "--out", str(tmp_path / "o3"), "--mock", "--new-task"])
+    assert again["served_from"] == "existing" and again["run_id"] == first["run_id"]
+    assert fresh["served_from"] == "executed" and fresh["run_id"] != first["run_id"] and fresh["status"] == "completed"
+    rejected, code = cli(["--input", write(tmp_path, "b.json", BASE), "--db", db, "--out", str(tmp_path / "o4"), "--mock", "--new-task"])
+    assert rejected["status"] == "invalid_input" and code == 2
