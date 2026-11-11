@@ -9,16 +9,16 @@
 
 ## 自动化测试
 
-命令与实际结果见 [examples/test-results.txt](../examples/test-results.txt)。
+共 82 项，全部通过（`uv run pytest`）。命令、环境与实际输出见 [examples/test-results.txt](../examples/test-results.txt)。
 
 | 文件 | 覆盖 |
 |---|---|
-| `test_schema.py` | 11 类格式错误 → `invalid_input`；缺字段 → `needs_input` 且列出缺项；类型错误优先于缺失；指纹：表示法差异等价（10 == 10.0、首尾空白、时区）、语义差异不等价（不 casefold） |
+| `test_schema.py` | 11 类格式错误 → `invalid_input`；缺字段 → `needs_input` 且列出缺项；类型错误优先于缺失；校验不改动调用方的原始输入；指纹：表示法差异等价（10 == 10.0、首尾空白、时区）、语义差异不等价（不 casefold） |
 | `test_plan.py` | 参考实例 12 → 8；最低可行费用 3；已花费不被重规划抹掉；6 类结构非法；修订不能删 main / 改 done；改档位重置失败步骤；模拟时钟与截止；保存阻塞项 |
 | `test_tools.py` | 执行前校验错误码顺序；拒绝不计费；改计划后必须重估；依赖未完成；done 步骤复用不重复计费；素材引用限制；注入 first/always 与重试上限；档位取自计划；调整说明的触发与变更 |
 | `test_finish.py` | 无计划 / 未保存 / 估算过期 → `finish_rejected` / `not_saveable`；incomplete 需原因；只做可选脚本不能保存 |
 | `test_loop_mock.py` | 11 个场景各一用例：状态、费用、保存、缺口、attempts、调整触发、五要素齐全、日志只追加；失败步骤不出现在产物中；账本 = done 步骤费用之和 |
-| `test_cli.py` | 进程级两次启动：第二次 `served_from=existing`、零新事件、库中 1 任务 1 保存；同 id 不同预算 → `request_conflict`；不同 id 各自执行；失败任务需显式 `--resume`；退出码 |
+| `test_cli.py` | 进程级两次启动：第二次 `served_from=existing`、零新事件、库中 1 任务 1 保存；同 id 不同预算 → `request_conflict`；不同 id 各自执行；无 id 时 `--new-task` 才新建任务；失败任务需显式 `--resume`；退出码 |
 
 ## 场景与验收点对照
 
@@ -35,7 +35,7 @@
 | invalid_input | budget 为字符串 | `invalid_input`，退出码 2 | 退出码 2 | 同 | 格式 |
 | no_materials | 主题无命中 | 空结果观察 → 模型补搜 → completed | completed，费用 4，trigger=no_materials | — | 素材不足不伪造 |
 | deadline_tight | 截止只剩 1.5h | pro 超期 → 模型改 lite → completed | completed，费用 3，trigger=over_deadline | **completed，9 步，费用 3**：首版完整版主脚本 → 估算超时 1 小时 → 模型改为简版 → 再估算通过 → 执行 → 保存；终报记 `over_deadline` | 截止约束；估算后重规划 |
-| duplicate | 同输入两次启动 | 第二次 `served_from=existing`，零新事件 | `test_cli.py` 通过 | 同（入口层逻辑） | 重复执行 |
+| duplicate | 同输入两次启动 | 第二次 `served_from=existing`，零新事件 | `test_cli.py` 通过；记录见 `examples/mock/duplicate/`（first / second / db_dump） | 同（入口层逻辑） | 重复执行 |
 | step_limit | `--max-steps 4` | incomplete，`step_limit_reached`，可续跑 | incomplete，已完成 2 步保留 | — | 步数上限 |
 | resume | `--inject generate_script:always` 后不注入 `--resume` | attempt 2，已完成的搜索复用，只补做失败的主脚本 | `test_cli.py` 进程级两次启动通过 | **attempt1 incomplete（`step_limit_reached`，15 步）；attempt2 `--resume` completed（7 步，总费用 3）**：搜索不重做不重复计费，同一任务 attempt_no=2 | 续跑（加分）；工具持续失败 |
 

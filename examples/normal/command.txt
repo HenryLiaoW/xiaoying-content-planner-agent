@@ -1,0 +1,2 @@
+# 正常完成（真实模型）
+uv run python -m src.main --input examples/normal/input.json --out out/normal

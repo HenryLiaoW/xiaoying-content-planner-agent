@@ -1,0 +1,2 @@
+# 脚本服务第一次调用失败，之后正常（真实模型）
+uv run python -m src.main --input examples/tool_failure_once/input.json --out out/tool_failure_once --inject generate_script:first

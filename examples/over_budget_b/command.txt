@@ -1,0 +1,2 @@
+# 预算 8、质量偏好 high（真实模型）
+uv run python -m src.main --input examples/over_budget_b/input.json --out out/over_budget_b

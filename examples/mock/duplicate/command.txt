@@ -1,0 +1,6 @@
+# 重复执行：同一输入、同一数据库，连续启动两次（离线 Mock；重复判断发生在调用模型之前，与模型无关）
+uv run python -m src.main --input examples/mock/duplicate/input.json --mock --db out/dup.db --out out/dup_first
+uv run python -m src.main --input examples/mock/duplicate/input.json --mock --db out/dup.db --out out/dup_second
+# 导出库中记录核对：只有 1 个任务、1 份已保存方案、3 笔账
+uv run python -m src.main dump --db out/dup.db --run <first/output.json 里的 run_id>
+# 看点：second/output.json 的 served_from 为 existing，run_id 与 first 相同，费用仍为 8；second/ 下没有 trace（零新事件）
