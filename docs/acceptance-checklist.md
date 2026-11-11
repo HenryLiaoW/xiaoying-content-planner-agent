@@ -6,7 +6,7 @@
 - 来源：**[题]** 第 2 题原文；**[通用]** 通用考核要求；**[示例]** 示例仓库的交付规范；**[自设]** 本项目自己加的标准。
 - 最终候选源码上的两轮真实复验（独立数据库、记录源码版本、不覆盖历史输出）见 `examples/final/README.md`。
 - 路径均相对仓库根目录。"真实"指本机用 qwen-plus 跑出的记录；"离线"指 `examples/mock/`，只验证流程，不代表真实模型的决策效果。
-- 汇总：85 行中 **81 行达成、3 行部分达成、1 行在提交时完成**（G1 最终提交号）。部分达成的 3 行（R14、A5、P2）是同一件事：真实模型在**预算**约束下没有走出"先超限、再改计划"。
+- 汇总：85 行中 **84 行达成、1 行在提交时完成**（G1 最终提交号）。R14、A5、P2 三行是同一件事（真实模型在**预算**约束下的"超限后再改"），原为部分达成，11-11 用独立验证实验补了真实证据后改为达成，并带着同一条限定：**超预算的初稿是人工预置的**，真实模型在常规运行里不会自己先提出超预算的计划。
 
 ## 0. 题目原文
 
@@ -40,7 +40,7 @@
 | R11 | 交付含工具结果 | ✅ `result.artifacts`；完整过程在 `trace_review.json` |
 | R12 | 交付含费用合计 | ✅ `result.spent_cost / remaining_estimate / projected_total`；`tests/test_loop_mock.py::test_ledger_equals_sum_of_done_steps` |
 | R13 | 交付含已保存方案或未完成原因 | ✅ 完成时 `result.saved_plan`；否则 `result.unfinished_reason` 与 `user_message` |
-| R14 | 动态决策：成本超限时调整 / 选替代 / 停止 | ⚠️ 部分达成。离线 `examples/mock/over_budget`（12→8）与 `mock/infeasible`（停止并报缺口）走通；真实模型在预算 10 / 8 下拟计划时就控制在预算内，没有出现"超限后再改"（价格表写在提示词里）。真实模型在**截止时间**超限下走通了同一机制：`examples/deadline_tight`。见 `docs/03-evaluation.md` |
+| R14 | 动态决策：成本超限时调整 / 选替代 / 停止 | ✅（带限定）真实模型：从人工预置的超预算初稿（12 / 预算 10）出发，三次运行都自己把预热脚本改为简版 → 重估 9 → 保存，`examples/seeded_over_budget/`；截止时间超限下同一机制见 `examples/deadline_tight`。离线：`examples/mock/over_budget`（12→8）、`mock/infeasible`（停止并报缺口）。限定：常规运行里模型拟计划时就控制在预算内，不会自己先超限。见 `docs/03-evaluation.md` |
 | R15 | 动态决策：工具错误时调整 / 停止 | ✅ 真实：`examples/tool_failure_once`（重试）、`examples/tool_failure_persistent`（降档后仍失败 → 主动停止） |
 | R16 | 动态决策：部分成功时据此调整 | ✅ 真实：`examples/resume/attempt2`（搜索已完成 → 只补做主脚本） |
 | R17 | 保留已成功步骤的结果 | ✅ 真实：续跑后账本 1 + 2 = 3，搜索未重做；`tests/test_plan.py`（已花费不被重规划抹掉）、`tests/test_tools.py`（已完成步骤复用不重复计费） |
@@ -53,7 +53,7 @@
 | A2 | 缺预算 | ✅ `examples/mock/missing_budget`：`needs_input`，指明缺 budget；不调模型、不计费（该路径与模型无关） |
 | A3 | 缺截止时间 | ✅ `examples/mock/missing_deadline`：同上 |
 | A4 | 工具失败 | ✅ 真实：`examples/tool_failure_once`、`examples/tool_failure_persistent`；失败不计费、不记为成功 |
-| A5 | 预算超限 | ⚠️ 部分达成。同 R14：离线与测试覆盖"超限 → 改方案 → 再估算"和"无可行方案 → 未完成"；真实模型未触发预算重规划（`examples/over_budget`、`examples/over_budget_b` 如实记录） |
+| A5 | 预算超限 | ✅（带限定）同 R14：真实模型在人工预置的超预算初稿上完成"估算超限 → 改方案 → 再估算 → 保存"（`examples/seeded_over_budget/`，三次）；离线与测试另覆盖"无可行方案 → 未完成"。常规真实运行未触发预算重规划（`examples/over_budget`、`examples/over_budget_b` 如实记录） |
 | A6 | 重复执行 | ✅ `examples/mock/duplicate`（first / second / db_dump：第二次 `served_from=existing`，库中 1 个任务、1 份保存、3 笔账）；`tests/test_cli.py::test_duplicate_submission_is_idempotent` |
 | A7 | （加分）失败步骤续跑 | ✅ 真实：`examples/resume/attempt1`（incomplete）→ `attempt2`（`--resume`，completed，只重做主脚本） |
 
@@ -62,7 +62,7 @@
 | 编号 | 要求 | 结果与证据 |
 |---|---|---|
 | P1 | 预算 10 下能复现"初始 12 → 替代 8"的费用关系 | ✅ `tests/test_plan.py::test_reference_example_12_then_8`、`examples/mock/over_budget`。真实模型直接给出预算内方案，已如实记录，未伪造 |
-| P2 | 观察到超预算后改选、再估算、再保存 | ⚠️ 部分达成。该顺序在离线 `mock/over_budget` 走通；真实模型走通的是截止时间版本（`examples/deadline_tight`：估算超时 → 改计划 → 再估算 → 保存），预算版本未出现 |
+| P2 | 观察到超预算后改选、再估算、再保存 | ✅（带限定）真实模型三次运行都按这个顺序走完：`examples/seeded_over_budget/`（估算 12 → 改选 9 → 再估算 → 保存；初稿为人工预置，结果是 9 不是 8）。离线 `mock/over_budget` 走的是 12 → 8 |
 | P3 | 无可行方案时返回未完成及缺口 | ✅ `examples/mock/infeasible`：incomplete，缺口 1，无保存 |
 | P4 | 不能把失败步骤记为成功 | ✅ 真实：`tool_failure_persistent` 主脚本状态 failed、无产物、未计费；`tests/test_loop_mock.py::test_failed_step_never_recorded_as_success` |
 | P5 | 核对预算计算 | ✅ 终报费用 = 账本求和 = 已完成步骤费用之和（`test_ledger_equals_sum_of_done_steps`）；`dump` 可导出账本 |
@@ -142,10 +142,10 @@
 
 | 部分 | 总行数 | ✅ | ⚠️ | ☐ 提交时 |
 |---|---|---|---|---|
-| 1 项目要求 | 17 | 16 | 1 | 0 |
-| 2 必须验收 | 7 | 6 | 1 | 0 |
-| 3 参考实例与审核要点 | 9 | 8 | 1 | 0 |
+| 1 项目要求 | 17 | 17 | 0 | 0 |
+| 2 必须验收 | 7 | 7 | 0 | 0 |
+| 3 参考实例与审核要点 | 9 | 9 | 0 | 0 |
 | 4 通用考核 | 13 | 12 | 0 | 1 |
 | 5 示例仓库规范 | 24 | 24 | 0 | 0 |
 | 6 自设标准 | 15 | 15 | 0 | 0 |
-| **合计** | **85** | **81** | **3** | **1** |
+| **合计** | **85** | **84** | **0** | **1** |

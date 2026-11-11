@@ -8,6 +8,7 @@
 | `over_budget/` `over_budget_b/` | 真实模型 | 预算 10 / 8：模型在拟计划阶段就控制在预算内 |
 | `deadline_tight/` | 真实模型 | 估算超时 1 小时 → 模型把主脚本改为简版 → 再估算通过 → 完成 |
 | `resume/attempt1` `attempt2` | 真实模型 | 持续失败用完动作额度 → `--resume` 续跑，只补做失败步骤，不重复计费 |
+| `seeded_over_budget/run1` `run2` `run3` | 真实模型，**独立验证实验**（初稿由人工预置，不是生产流程；`experiments/seeded_over_budget.py`） | 预算超限后的重规划：估算 12 超出预算 10 → 模型自己把预热脚本改为简版 → 重估 9 → 保存。三次走向一致。说明见 `seeded_over_budget/README.md` |
 | `final/` | 真实模型，**最终候选源码**上的复验（独立数据库；每份终报的 `source_version` 记录源码版本；不覆盖上面的历史记录） | 两轮各 5 条：正常完成、失败一次、持续失败、恢复后续跑、截止时间紧。第一轮暴露一个缺陷并已修复；修复后的第二轮（`final/rerun/`）全部符合预期。说明见 `final/README.md` |
 | `mock/<场景>/` ×11 | 离线 Mock（只验证流程） | 全部验收点，见 `docs/03-evaluation.md` 场景表 |
 | `mock/duplicate/` | 离线（重复判断在调用模型之前，与模型无关） | 重复执行：同一输入启动两次，第二次返回已有结果，不重做、不重复计费；附库导出 |

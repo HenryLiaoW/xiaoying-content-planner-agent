@@ -1,0 +1,41 @@
+{
+  "reason": "【人工预置初稿，非模型生成】验证实验用：两次搜素材，主视频与预热脚本都用完整版",
+  "steps": [
+    {
+      "id": "s1",
+      "action": "search_materials",
+      "query": "一键Vlog模板 教程"
+    },
+    {
+      "id": "s2",
+      "action": "search_materials",
+      "query": "双11 Vlog推广 素材"
+    },
+    {
+      "id": "s3",
+      "action": "generate_script",
+      "tier": "pro",
+      "depends_on": [
+        "s1"
+      ],
+      "deliverable": {
+        "key": "main",
+        "required": true
+      },
+      "brief": "主推广视频脚本"
+    },
+    {
+      "id": "s4",
+      "action": "generate_script",
+      "tier": "pro",
+      "depends_on": [
+        "s2"
+      ],
+      "deliverable": {
+        "key": "teaser",
+        "required": false
+      },
+      "brief": "预热短视频脚本"
+    }
+  ]
+}

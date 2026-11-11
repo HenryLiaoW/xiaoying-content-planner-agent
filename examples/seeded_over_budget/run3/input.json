@@ -1,0 +1,8 @@
+{
+  "request_id": "req-seeded-over-budget-001",
+  "topic": "一键 Vlog 模板双11推广",
+  "budget": 10,
+  "deadline": "2026-11-12T18:00:00+08:00",
+  "now": "2026-11-10T09:00:00+08:00",
+  "quality_preference": "high"
+}

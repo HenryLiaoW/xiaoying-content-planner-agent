@@ -64,6 +64,7 @@ python -m src.main dump --db PATH --run RUN_ID      # 导出某任务在库中�
 │   └── mock_scripts.py  离线脚本（每场景一份，核对收到的观察）
 ├── tests/
 ├── examples/        每个场景：input.json / output.json / trace.jsonl / trace_review.json / command.txt（索引见 examples/README.md）
+├── experiments/     独立验证实验脚本（不属于生产流程；见 examples/seeded_over_budget/README.md）
 └── docs/            01-requirements … 05-retrospective、acceptance-checklist.md（逐条验收自查）、timelog.md
 ```
 
