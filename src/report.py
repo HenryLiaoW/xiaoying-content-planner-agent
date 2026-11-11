@@ -175,7 +175,7 @@ def _user_message(
     if reason == "step_limit_reached":
         return f"已用完 {max_steps} 次动作额度，任务未完成；{kept}，可用 --resume 继续。{_HANDOFF_HINT}"
     if reason == "llm_error":
-        return f"模型接口调用失败，任务未完成；{kept}，检查网络或密钥后可用 --resume 继续。{_HANDOFF_HINT}"
+        return f"模型接口调用失败，任务未完成；{kept}，稍后可用 --resume 继续。{_HANDOFF_HINT}"
     if status == "failed":
         failed = [s for s in (plan.steps if plan else []) if s.status == "failed"]
         what = "；".join(f"{_step_name(s)}{_failure_count(s)}" for s in failed) or "执行失败"

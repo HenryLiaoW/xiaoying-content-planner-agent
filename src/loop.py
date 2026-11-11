@@ -32,6 +32,24 @@ class LoopResult:
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 
 
+def _with_valid_tool_arguments(assistant_message: dict[str, Any]) -> dict[str, Any]:
+    """模型偶尔会发出不是合法 JSON 的工具参数（例如被截断）。
+
+    这样的参数原样放回对话历史，接口会拒绝下一次请求（百炼返回 400），任务就此中断。
+    所以放回历史之前把它换成合法 JSON，并保留原文供模型参考；模型收到的观察仍是 invalid_args，可以重发。
+    """
+    for tc in assistant_message.get("tool_calls") or []:
+        fn = tc.get("function") or {}
+        raw = fn.get("arguments")
+        try:
+            valid = isinstance(json.loads(raw or "{}"), dict)
+        except (json.JSONDecodeError, TypeError):
+            valid = False
+        if not valid:
+            fn["arguments"] = json.dumps({"_invalid_arguments": str(raw)[:500]}, ensure_ascii=False)
+    return assistant_message
+
+
 def load_prompt_template(name: str = "system.md") -> Template:
     """提示词模板独立存放在 src/prompts/，用 string.Template 的 $变量 占位；改措辞不需要改代码。"""
     return Template((PROMPT_DIR / name).read_text(encoding="utf-8"))
@@ -97,7 +115,7 @@ def run_loop(
         rounds += 1
         for k, v in reply.usage.items():
             usage[k] = usage.get(k, 0) + v
-        messages.append(reply.assistant_message)
+        messages.append(_with_valid_tool_arguments(reply.assistant_message))
 
         if not reply.tool_calls:
             no_tool_streak += 1
@@ -116,7 +134,8 @@ def run_loop(
                     reason=reason, llm_round=rounds, latency_ms=reply.latency_ms)
 
         if args is None:
-            obs: dict[str, Any] = {"ok": False, "error": "invalid_args", "retryable": False, "message": "工具参数不是合法 JSON 对象"}
+            obs: dict[str, Any] = {"ok": False, "error": "invalid_args", "retryable": True,
+                                   "message": "工具参数不是合法的 JSON 对象（可能被截断）；请重新发出完整的参数"}
         else:
             obs = tools.execute(call.name, args)
 

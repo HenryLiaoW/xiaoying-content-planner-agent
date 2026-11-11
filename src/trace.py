@@ -14,6 +14,7 @@ SUMMARY_KEYS = (
     "revision", "projected_total", "remaining_estimate", "within_budget", "within_deadline",
     "over_budget_by", "over_time_hours", "min_feasible_cost", "count", "attempts", "attempts_left",
     "saved", "accepted", "changed", "deps_not_done", "problems", "reasons", "allowed", "unfinished_reason",
+    "tool_failures_total", "warning", "warning_steps", "note",  # 模型在观察里实际看到的累计失败数与提醒
 )
 
 
